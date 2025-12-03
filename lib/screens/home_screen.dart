@@ -27,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   late AnimationController _animationController;
   late Animation<double> _logoScaleAnimation;
   late Animation<double> _buttonsFadeAnimation;
+  late Animation<double> _profileExpandAnimation; // New animation for smooth collapse
   
   // --- Form Controllers ---
   late TextEditingController nameController;
@@ -64,6 +65,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       CurvedAnimation(
         parent: _animationController,
         curve: const Interval(0.0, 0.8, curve: Curves.easeInOut), 
+      ),
+    );
+
+    // Animation for Profile Content: Expands from 0.0 to 1.0
+    // This allows the profile to collapse smoothly instead of disappearing instantly
+    _profileExpandAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
       ),
     );
 
@@ -155,15 +165,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     widget.onSaveProfile(updatedProfile);
     
+    // Show success message
     setState(() {
       showSuccess = true;
     });
     
+    // Wait for 2 seconds, then smoothly collapse
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         setState(() {
           showSuccess = false;
           isProfileExpanded = false;
+          // This reverses the animation controller, causing the SizeTransition
+          // to shrink the profile smoothly back to 0 height.
           _animationController.reverse();
         });
       }
@@ -184,19 +198,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               child: Column(
                 children: [
                   
-                  // 1. RESTORED: Your Original Logo Logic (Animated)
+                  // 1. Animated Logo
                   ScaleTransition(
                     scale: _logoScaleAnimation,
                     child: Container(
                       margin: const EdgeInsets.only(top: 16),
-                      // This uses your original image logic
                       child: Image.asset(
                         'assets/images/logo.png',
                         width: 320, 
                         height: 320,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) {
-                          // Only shows this blue box if image fails to load
                           return Container(
                             width: 320,
                             height: 320,
@@ -285,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                     child: Column(
                       children: [
-                        // Profile Header
+                        // Profile Header (Always Visible)
                         InkWell(
                           onTap: toggleProfile,
                           borderRadius: BorderRadius.circular(12),
@@ -320,132 +332,152 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           ),
                         ),
                         
-                        // Expanded Form Content
-                        if (isProfileExpanded) ...[
-                          const Divider(height: 1),
-                          Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (showSuccess)
-                                  Container(
-                                    margin: const EdgeInsets.only(bottom: 16),
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF4CAF50),
-                                      borderRadius: BorderRadius.circular(8),
+                        // 4. Expanded Form Content (Wrapped in SizeTransition for smooth collapse)
+                        // We removed "if (isProfileExpanded)" so the widget stays in the tree
+                        // and animates its size down to 0 when closed.
+                        SizeTransition(
+                          sizeFactor: _profileExpandAnimation,
+                          axisAlignment: -1.0,
+                          child: Column(
+                            children: [
+                              const Divider(height: 1),
+                              Padding(
+                                padding: const EdgeInsets.all(24),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // -- Personal Info --
+                                    _buildSectionHeader('Personal Information', Icons.person),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      controller: nameController,
+                                      label: 'Full Name',
+                                      placeholder: 'e.g., Ahmad Bin Ali',
                                     ),
-                                    child: const Center(
-                                      child: Text(
-                                        'Profile Saved Successfully!',
-                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                    const SizedBox(height: 16),
+                                    _buildDropdown(
+                                      label: 'Role',
+                                      value: selectedRole,
+                                      items: const ['Student', 'Lecturer', 'Staff', 'Other'],
+                                      onChanged: (val) => setState(() => selectedRole = val!),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      controller: facultyController,
+                                      label: 'Faculty',
+                                      placeholder: 'e.g., Faculty of Computing',
+                                    ),
+                                    const SizedBox(height: 16),
+                                    if (selectedRole == 'Student') ...[
+                                      _buildTextField(
+                                        controller: programController,
+                                        label: 'Program',
+                                        placeholder: 'e.g., Computer Science',
+                                      ),
+                                      const SizedBox(height: 16),
+                                    ],
+                                    _buildTextField(
+                                      controller: phoneNumberController,
+                                      label: 'Phone Number',
+                                      placeholder: '+60123456789',
+                                      inputType: TextInputType.phone,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildDropdown(
+                                      label: 'Preferred Contact Method',
+                                      value: selectedContactMethod,
+                                      items: const ['WhatsApp', 'Telegram', 'Phone', 'SMS/Message'],
+                                      onChanged: (val) => setState(() => selectedContactMethod = val!),
+                                    ),
+                                    const SizedBox(height: 24),
+
+                                    // -- Vehicle Info --
+                                    _buildSectionHeader('Vehicle Information', Icons.directions_car),
+                                    const SizedBox(height: 8),
+                                    CheckboxListTile(
+                                      value: isVehicleOwner,
+                                      onChanged: (val) => setState(() => isVehicleOwner = val ?? false),
+                                      title: const Text('I own a vehicle and can offer rides'),
+                                      contentPadding: EdgeInsets.zero,
+                                      activeColor: const Color(0xFF2B67F6),
+                                      controlAffinity: ListTileControlAffinity.leading,
+                                    ),
+                                    if (isVehicleOwner) ...[
+                                      const SizedBox(height: 16),
+                                      _buildTextField(
+                                        controller: vehicleModelController,
+                                        label: 'Vehicle Model',
+                                        placeholder: 'e.g., Perodua Myvi',
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildTextField(
+                                        controller: plateNumberController,
+                                        label: 'License Plate',
+                                        placeholder: 'e.g., ABC 1234',
+                                        uppercase: true,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildDropdown(
+                                        label: 'Max Seats',
+                                        value: maxSeats.toString(),
+                                        items: const ['1', '2', '3', '4', '5', '6', '7'],
+                                        onChanged: (val) => setState(() => maxSeats = int.parse(val!)),
+                                      ),
+                                    ],
+                                    
+                                    const SizedBox(height: 24),
+
+                                    // 5. SUCCESS MESSAGE (Moved Here)
+                                    // Using AnimatedSwitcher for smooth appearance/disappearance
+                                    AnimatedSwitcher(
+                                      duration: const Duration(milliseconds: 300),
+                                      transitionBuilder: (Widget child, Animation<double> animation) {
+                                        return FadeTransition(opacity: animation, child: SizeTransition(sizeFactor: animation, axisAlignment: -1.0, child: child));
+                                      },
+                                      child: showSuccess
+                                          ? Container(
+                                              key: const ValueKey('success_message'),
+                                              width: double.infinity,
+                                              margin: const EdgeInsets.only(bottom: 16),
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF4CAF50),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: const Center(
+                                                child: Text(
+                                                  'Profile Saved Successfully!',
+                                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                                ),
+                                              ),
+                                            )
+                                          : const SizedBox.shrink(key: ValueKey('empty')),
+                                    ),
+                                    
+                                    // Save Button
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: 48,
+                                      child: ElevatedButton.icon(
+                                        onPressed: handleSave,
+                                        icon: const Icon(Icons.save),
+                                        label: const Text('Save Profile'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFF2B67F6),
+                                          foregroundColor: Colors.white,
+                                          elevation: 0,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ),
-
-                                // -- Personal Info --
-                                _buildSectionHeader('Personal Information', Icons.person),
-                                const SizedBox(height: 16),
-                                _buildTextField(
-                                  controller: nameController,
-                                  label: 'Full Name',
-                                  placeholder: 'e.g., Ahmad Bin Ali',
+                                  ],
                                 ),
-                                const SizedBox(height: 16),
-                                _buildDropdown(
-                                  label: 'Role',
-                                  value: selectedRole,
-                                  items: const ['Student', 'Lecturer', 'Staff', 'Other'],
-                                  onChanged: (val) => setState(() => selectedRole = val!),
-                                ),
-                                const SizedBox(height: 16),
-                                _buildTextField(
-                                  controller: facultyController,
-                                  label: 'Faculty',
-                                  placeholder: 'e.g., Faculty of Computing',
-                                ),
-                                const SizedBox(height: 16),
-                                if (selectedRole == 'Student') ...[
-                                  _buildTextField(
-                                    controller: programController,
-                                    label: 'Program',
-                                    placeholder: 'e.g., Computer Science',
-                                  ),
-                                  const SizedBox(height: 16),
-                                ],
-                                _buildTextField(
-                                  controller: phoneNumberController,
-                                  label: 'Phone Number',
-                                  placeholder: '+60123456789',
-                                  inputType: TextInputType.phone,
-                                ),
-                                const SizedBox(height: 16),
-                                _buildDropdown(
-                                  label: 'Preferred Contact Method',
-                                  value: selectedContactMethod,
-                                  items: const ['WhatsApp', 'Telegram', 'Phone', 'SMS/Message'],
-                                  onChanged: (val) => setState(() => selectedContactMethod = val!),
-                                ),
-                                const SizedBox(height: 24),
-
-                                // -- Vehicle Info --
-                                _buildSectionHeader('Vehicle Information', Icons.directions_car),
-                                const SizedBox(height: 8),
-                                CheckboxListTile(
-                                  value: isVehicleOwner,
-                                  onChanged: (val) => setState(() => isVehicleOwner = val ?? false),
-                                  title: const Text('I own a vehicle and can offer rides'),
-                                  contentPadding: EdgeInsets.zero,
-                                  activeColor: const Color(0xFF2B67F6),
-                                  controlAffinity: ListTileControlAffinity.leading,
-                                ),
-                                if (isVehicleOwner) ...[
-                                  const SizedBox(height: 16),
-                                  _buildTextField(
-                                    controller: vehicleModelController,
-                                    label: 'Vehicle Model',
-                                    placeholder: 'e.g., Perodua Myvi',
-                                  ),
-                                  const SizedBox(height: 16),
-                                  _buildTextField(
-                                    controller: plateNumberController,
-                                    label: 'License Plate',
-                                    placeholder: 'e.g., ABC 1234',
-                                    uppercase: true,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  _buildDropdown(
-                                    label: 'Max Seats',
-                                    value: maxSeats.toString(),
-                                    items: const ['1', '2', '3', '4', '5', '6', '7'],
-                                    onChanged: (val) => setState(() => maxSeats = int.parse(val!)),
-                                  ),
-                                ],
-                                const SizedBox(height: 24),
-                                
-                                // Save Button
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 48,
-                                  child: ElevatedButton.icon(
-                                    onPressed: handleSave,
-                                    icon: const Icon(Icons.save),
-                                    label: const Text('Save Profile'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF2B67F6),
-                                      foregroundColor: Colors.white,
-                                      elevation: 0,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ],
                     ),
                   ),

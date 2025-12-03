@@ -60,15 +60,15 @@ class _RideShareAppState extends State<RideShareApp> {
       id: 'u1', // New field
       name: 'Alfan Na Im bin Shabaruddin',
       role: 'Student', // New field
-      faculty: 'Faculty of Computer Science', // New field
-      program: 'Computer Science',
+      faculty: 'Faculty of Computer Science and Mathematics', // New field
+      program: 'BCS. Mobile Computing',
       contactMethod: 'WhatsApp', // Changed from contactType
-      phoneNumber: '+60123456789', // Changed from contactValue
+      phoneNumber: '+601124181384', // Changed from contactValue
       isVehicleOwner: true, // Changed from hasVehicle
       vehicleDetails: VehicleDetails( // New nested object
-        model: 'Perodua Myvi',
-        plateNumber: 'ABC 1234',
-        maxSeats: 4,
+        model: 'Yamaha 135LC Fi',
+        plateNumber: 'VJH 5198',
+        maxSeats: 1,
       ),
     );
 
