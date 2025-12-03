@@ -55,15 +55,17 @@ class _RideShareAppState extends State<RideShareApp> {
   @override
   void initState() {
     super.initState();
-    // Initialize with sample user profile (Updated for UMT Specifics)
+    
+    // 1. Initialize with a complete UMT Student Profile
     userProfile = UserProfile(
       id: 'u1',
       name: 'Alfan Na Im bin Shabaruddin',
       role: 'Student',
-      matricNumber: 'S72505', 
+      matricNumber: 'S58492',
       gender: 'Male',
       faculty: 'Faculty of Computer Science and Mathematics',
       program: 'Mobile Computing',
+      // department: null, // Not needed for student
       contactMethod: 'WhatsApp',
       phoneNumber: '+601124181384',
       isVehicleOwner: true,
@@ -71,11 +73,13 @@ class _RideShareAppState extends State<RideShareApp> {
         model: 'Yamaha 135LC Fi',
         plateNumber: 'VJH 5198',
         maxSeats: 1,
-        type: 'Motorcycle'
+        type: 'Motorcycle',
       ),
     );
 
-    // Add sample data for testing - 5 Ride Offers
+    // 2. Align Mock Data with UMT Context
+    // We update driverInfo/requesterInfo to match the style of the new profile data
+    
     offers.addAll([
       RideOffer(
         pickup: 'KTS',
@@ -83,8 +87,8 @@ class _RideShareAppState extends State<RideShareApp> {
         time: '5:30 PM',
         seats: 2,
         driverName: 'Aiman',
-        driverInfo: 'FiST Student',
-        costSharing: 'RM2-RM4',
+        driverInfo: 'Student • Faculty of Ocean Engineering Technology',
+        costSharing: 'RM 2.00',
       ),
       RideOffer(
         pickup: 'Residential College',
@@ -92,17 +96,17 @@ class _RideShareAppState extends State<RideShareApp> {
         time: '2:00 PM',
         seats: 3,
         driverName: 'Nurul',
-        driverInfo: 'FST Student',
-        costSharing: 'RM3',
+        driverInfo: 'Student • Faculty of Science and Marine Environment',
+        costSharing: 'RM 3.00',
       ),
       RideOffer(
         pickup: 'Campus Gate',
         destination: 'Kuala Terengganu',
         time: '4:15 PM',
         seats: 1,
-        driverName: 'Ahmad',
-        driverInfo: 'FKM Student',
-        costSharing: 'RM5-RM7',
+        driverName: 'Dr. Ahmad',
+        driverInfo: 'Lecturer • Faculty of Maritime Studies',
+        costSharing: 'RM 5.00',
       ),
       RideOffer(
         pickup: 'Library',
@@ -110,8 +114,8 @@ class _RideShareAppState extends State<RideShareApp> {
         time: '8:00 AM',
         seats: 4,
         driverName: 'Siti',
-        driverInfo: 'FPP Student',
-        costSharing: 'RM2',
+        driverInfo: 'Student • Faculty of Fisheries and Food Science',
+        costSharing: 'RM 1.00',
       ),
       RideOffer(
         pickup: 'KTS',
@@ -119,12 +123,11 @@ class _RideShareAppState extends State<RideShareApp> {
         time: '1:30 PM',
         seats: 2,
         driverName: 'Zainal',
-        driverInfo: 'FKM Student',
+        driverInfo: 'Staff • Development & Maintenance Department',
         costSharing: 'Free',
       ),
     ]);
 
-    // Add sample data for testing - 5 Ride Requests
     requests.addAll([
       RideRequest(
         pickup: 'Mydin',
@@ -132,8 +135,8 @@ class _RideShareAppState extends State<RideShareApp> {
         time: '6:00 PM',
         riders: 2,
         requesterName: 'Hafiz',
-        requesterInfo: 'FiST Student',
-        notes: 'Can share costs',
+        requesterInfo: 'Student • Faculty of Business, Economics and Social Development',
+        notes: 'Can share costs, carrying groceries',
       ),
       RideRequest(
         pickup: 'Residential College',
@@ -141,8 +144,8 @@ class _RideShareAppState extends State<RideShareApp> {
         time: '3:30 PM',
         riders: 1,
         requesterName: 'Aina',
-        requesterInfo: 'FST Student',
-        notes: 'Willing to pay RM5',
+        requesterInfo: 'Student • Faculty of Computer Science and Mathematics',
+        notes: 'Willing to pay RM 5',
       ),
       RideRequest(
         pickup: 'KTS',
@@ -150,8 +153,8 @@ class _RideShareAppState extends State<RideShareApp> {
         time: '11:00 AM',
         riders: 3,
         requesterName: 'Yusof',
-        requesterInfo: 'FKM Student',
-        notes: 'Need ride for groceries shopping',
+        requesterInfo: 'Student • Faculty of Ocean Engineering Technology',
+        notes: 'Need ride for group shopping',
       ),
       RideRequest(
         pickup: 'Library',
@@ -159,8 +162,8 @@ class _RideShareAppState extends State<RideShareApp> {
         time: '9:30 PM',
         riders: 1,
         requesterName: 'Azlina',
-        requesterInfo: 'FPP Student',
-        notes: 'Late study session',
+        requesterInfo: 'Student • Faculty of Maritime Studies',
+        notes: 'Late study session, female driver preferred',
       ),
       RideRequest(
         pickup: 'Campus Gate',
@@ -168,8 +171,8 @@ class _RideShareAppState extends State<RideShareApp> {
         time: '8:30 AM',
         riders: 2,
         requesterName: 'Daniel',
-        requesterInfo: 'FiST Student',
-        notes: 'Morning class, willing to pay RM2',
+        requesterInfo: 'Student • Faculty of Fisheries and Food Science',
+        notes: 'Morning class, willing to pay RM 2',
       ),
     ]);
   }
@@ -214,8 +217,8 @@ class _RideShareAppState extends State<RideShareApp> {
         return HomeScreen(
           onFindRide: () => navigateTo('listings-offers'),
           onOfferRide: () => navigateTo('listings-requests'),
-          profile: userProfile!, 
-          onSaveProfile: handleSaveProfile, 
+          profile: userProfile!,
+          onSaveProfile: handleSaveProfile,
         );
 
       case 'listings-offers':
