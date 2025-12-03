@@ -1,6 +1,4 @@
-// Screen 2: RIDE LISTINGS
-// Widget Construction Requirement: ListView.builder for displaying posts
-
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../models/ride.dart';
 import '../widgets/ride_card.dart';
@@ -78,7 +76,9 @@ class _RideListingsScreenState extends State<RideListingsScreen> {
     final displayItems = getDisplayItems();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6FA),
+      // Updated background color to match Home theme
+      backgroundColor: const Color(0xFFEBF4FF),
+      
       // Right-side Filter Drawer
       endDrawer: Drawer(
         width: 320,
@@ -221,135 +221,152 @@ class _RideListingsScreenState extends State<RideListingsScreen> {
       ),
       // Backdrop with 50% opacity when drawer is open
       drawerScrimColor: Colors.black.withOpacity(0.5),
-      body: SafeArea(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 480),
-          margin: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Row(
+      
+      body: Stack(
+        children: [
+          // 1. Static Wave Background
+          Positioned.fill(
+            child: CustomPaint(
+              painter: FluidBackgroundPainter(
+                animationValue: 0.5, // Static value for non-moving waves
+              ),
+            ),
+          ),
+
+          // 2. Main Content
+          SafeArea(
+            // FIX: Wrapped in Center to fix "weird not center UI" issue
+            child: Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 480),
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
                   children: [
-                    IconButton(
-                      onPressed: widget.onBack,
-                      icon: const Icon(Icons.arrow_back),
-                      color: const Color(0xFF1F2937),
-                    ),
-                    Expanded(
-                      child: Text(
-                        widget.type == 'offers' ? 'Available Rides' : 'Ride Requests',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1F2937),
-                        ),
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: widget.onBack,
+                            icon: const Icon(Icons.arrow_back),
+                            color: const Color(0xFF1F2937),
+                          ),
+                          Expanded(
+                            child: Text(
+                              widget.type == 'offers' ? 'Available Rides' : 'Ride Requests',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1F2937),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              Scaffold.of(context).openEndDrawer();
+                            },
+                            icon: const Icon(Icons.tune),
+                            color: const Color(0xFF1F2937),
+                          ),
+                        ],
                       ),
                     ),
-                    IconButton(
-                      onPressed: () {
-                        Scaffold.of(context).openEndDrawer();
-                      },
-                      icon: const Icon(Icons.tune),
-                      color: const Color(0xFF1F2937),
+
+                    // List View
+                    Expanded(
+                      child: displayItems.isEmpty
+                          ? Container(
+                              padding: const EdgeInsets.all(32),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.9), // Slightly transparent
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'No rides found. Try adjusting your filters.',
+                                  style: TextStyle(
+                                    color: Color(0xFF6B7280),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: displayItems.length,
+                              itemBuilder: (context, index) {
+                                final item = displayItems[index];
+                                if (widget.type == 'offers') {
+                                  final offer = item as RideOffer;
+                                  return RideCard(
+                                    pickup: offer.pickup,
+                                    destination: offer.destination,
+                                    time: offer.time,
+                                    seats: offer.seats,
+                                    type: 'offer',
+                                    onTap: () {
+                                      setState(() {
+                                        selectedRide = offer;
+                                      });
+                                      _showRideDetailsModal(context, offer, 'offer');
+                                    },
+                                  );
+                                } else {
+                                  final request = item as RideRequest;
+                                  return RideCard(
+                                    pickup: request.pickup,
+                                    destination: request.destination,
+                                    time: request.time,
+                                    riders: request.riders,
+                                    type: 'request',
+                                    onTap: () {
+                                      setState(() {
+                                        selectedRide = request;
+                                      });
+                                      _showRideDetailsModal(context, request, 'request');
+                                    },
+                                  );
+                                }
+                              },
+                            ),
+                    ),
+
+                    // Create New Button
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: widget.onCreateNew,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: widget.type == 'offers'
+                                ? const Color(0xFF2B67F6)
+                                : const Color(0xFF4CAF50),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            widget.type == 'offers'
+                                ? 'Create Ride Request'
+                                : 'Create Ride Offer',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-
-              // Remove inline filter section - now using drawer
-              // Widget Construction Requirement: ListView.builder for displaying posts
-              Expanded(
-                child: displayItems.isEmpty
-                    ? Container(
-                        padding: const EdgeInsets.all(32),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'No rides found. Try adjusting your filters.',
-                            style: TextStyle(
-                              color: Color(0xFF6B7280),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: displayItems.length,
-                        itemBuilder: (context, index) {
-                          final item = displayItems[index];
-                          if (widget.type == 'offers') {
-                            final offer = item as RideOffer;
-                            return RideCard(
-                              pickup: offer.pickup,
-                              destination: offer.destination,
-                              time: offer.time,
-                              seats: offer.seats,
-                              type: 'offer',
-                              onTap: () {
-                                setState(() {
-                                  selectedRide = offer;
-                                });
-                                _showRideDetailsModal(context, offer, 'offer');
-                              },
-                            );
-                          } else {
-                            final request = item as RideRequest;
-                            return RideCard(
-                              pickup: request.pickup,
-                              destination: request.destination,
-                              time: request.time,
-                              riders: request.riders,
-                              type: 'request',
-                              onTap: () {
-                                setState(() {
-                                  selectedRide = request;
-                                });
-                                _showRideDetailsModal(context, request, 'request');
-                              },
-                            );
-                          }
-                        },
-                      ),
-              ),
-
-              // Create New Button
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: widget.onCreateNew,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.type == 'offers'
-                          ? const Color(0xFF2B67F6)
-                          : const Color(0xFF4CAF50),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      widget.type == 'offers'
-                          ? 'Create Ride Request'
-                          : 'Create Ride Offer',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -362,7 +379,7 @@ class _RideListingsScreenState extends State<RideListingsScreen> {
 
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.5), // 50% opacity backdrop
+      barrierColor: Colors.black.withOpacity(0.5),
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
@@ -550,5 +567,95 @@ class _RideListingsScreenState extends State<RideListingsScreen> {
         ),
       ],
     );
+  }
+}
+
+// --- Shared Fluid Wave Background Painter (Identical to Home) ---
+class FluidBackgroundPainter extends CustomPainter {
+  final double animationValue;
+
+  FluidBackgroundPainter({required this.animationValue});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint();
+    const double twoPi = 2 * math.pi;
+
+    // Wave 1 (Back/Top)
+    paint.color = const Color(0xFFBBDEFB).withOpacity(0.3);
+    _drawWave(canvas, size, paint, 
+      baselineY: size.height * 0.25, 
+      amplitude: 20, 
+      speedMultiplier: 1.0 * twoPi, 
+      offset: 0
+    );
+
+    // Wave 2
+    paint.color = const Color(0xFF90CAF9).withOpacity(0.3); 
+    _drawWave(canvas, size, paint, 
+      baselineY: size.height * 0.4, 
+      amplitude: 25, 
+      speedMultiplier: 1.3 * twoPi, 
+      offset: math.pi / 4
+    );
+
+    // Wave 3
+    paint.color = const Color(0xFF64B5F6).withOpacity(0.35); 
+    _drawWave(canvas, size, paint, 
+      baselineY: size.height * 0.55, 
+      amplitude: 30, 
+      speedMultiplier: 1.6 * twoPi, 
+      offset: math.pi / 2
+    );
+
+     // Wave 4
+    paint.color = const Color(0xFF42A5F5).withOpacity(0.35); 
+    _drawWave(canvas, size, paint, 
+      baselineY: size.height * 0.7, 
+      amplitude: 35, 
+      speedMultiplier: 2.0 * twoPi, 
+      offset: math.pi
+    );
+
+    // Wave 5 (Front/Bottom)
+    paint.color = const Color(0xFF1E88E5).withOpacity(0.4); 
+    _drawWave(canvas, size, paint, 
+      baselineY: size.height * 0.85, 
+      amplitude: 40, 
+      speedMultiplier: 2.5 * twoPi, 
+      offset: math.pi * 1.5
+    );
+  }
+
+  void _drawWave(Canvas canvas, Size size, Paint paint, {
+    required double baselineY,
+    required double amplitude,
+    required double speedMultiplier,
+    required double offset,
+  }) {
+    final path = Path();
+    path.moveTo(0, baselineY);
+
+    for (double i = 0; i <= size.width; i++) {
+      path.lineTo(
+        i,
+        baselineY +
+            amplitude *
+                math.sin((i / size.width * 2 * math.pi) + 
+                    (animationValue * speedMultiplier) + 
+                    offset),
+      );
+    }
+
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant FluidBackgroundPainter oldDelegate) {
+    return oldDelegate.animationValue != animationValue;
   }
 }
