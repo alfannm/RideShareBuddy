@@ -55,15 +55,21 @@ class _RideShareAppState extends State<RideShareApp> {
   @override
   void initState() {
     super.initState();
-    // Initialize with sample user profile
+    // Initialize with sample user profile (Updated for Version 2 Model)
     userProfile = UserProfile(
-      name: 'Ahmad bin Ali',
+      id: 'u1', // New field
+      name: 'Alfan Na Im bin Shabaruddin',
+      role: 'Student', // New field
+      faculty: 'Faculty of Computer Science', // New field
       program: 'Computer Science',
-      contactMethod: 'WhatsApp',
-      contactValue: '+60123456789',
-      hasVehicle: true,
-      vehicleModel: 'Perodua Myvi',
-      vehiclePlate: 'ABC 1234',
+      contactMethod: 'WhatsApp', // Changed from contactType
+      phoneNumber: '+60123456789', // Changed from contactValue
+      isVehicleOwner: true, // Changed from hasVehicle
+      vehicleDetails: VehicleDetails( // New nested object
+        model: 'Perodua Myvi',
+        plateNumber: 'ABC 1234',
+        maxSeats: 4,
+      ),
     );
 
     // Add sample data for testing - 5 Ride Offers

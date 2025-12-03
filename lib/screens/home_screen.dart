@@ -1,5 +1,3 @@
-// Screen 1: HOME/DASHBOARD with Collapsible Profile
-
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 
@@ -24,53 +22,74 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   bool isProfileExpanded = false;
   bool showSuccess = false;
-  
-  // Profile form controllers
-  late TextEditingController nameController;
-  late TextEditingController programController;
-  late TextEditingController contactValueController;
-  late TextEditingController vehicleModelController;
-  late TextEditingController vehiclePlateController;
-  
-  String selectedContactMethod = 'WhatsApp';
-  bool hasVehicle = false;
-  
+
+  // --- Animation Controllers ---
   late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
+  late Animation<double> _logoScaleAnimation;
+  late Animation<double> _buttonsFadeAnimation;
+  
+  // --- Form Controllers ---
+  late TextEditingController nameController;
+  late TextEditingController facultyController;
+  late TextEditingController programController;
+  late TextEditingController phoneNumberController;
+  late TextEditingController vehicleModelController;
+  late TextEditingController plateNumberController;
+
+  String selectedRole = 'Student';
+  String selectedContactMethod = 'WhatsApp';
+  bool isVehicleOwner = false;
+  int maxSeats = 4;
 
   @override
   void initState() {
     super.initState();
-    
-    // Initialize controllers with profile data
-    nameController = TextEditingController(text: widget.profile.name);
-    programController = TextEditingController(text: widget.profile.program);
-    contactValueController = TextEditingController(text: widget.profile.contactValue);
-    vehicleModelController = TextEditingController(text: widget.profile.vehicleModel ?? '');
-    vehiclePlateController = TextEditingController(text: widget.profile.vehiclePlate ?? '');
-    
-    selectedContactMethod = widget.profile.contactMethod;
-    hasVehicle = widget.profile.hasVehicle;
-    
-    // Animation setup
+
+    // 1. Initialize Animation Controller
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 400),
       vsync: this,
     );
     
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.75).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    // Animation for Logo: Shrinks from 1.0 to 0.6
+    _logoScaleAnimation = Tween<double>(begin: 1.0, end: 0.6).animate(
+      CurvedAnimation(
+        parent: _animationController, 
+        curve: Curves.easeInOut,
+      ),
     );
+
+    // Animation for Buttons: Visible (1.0) to Invisible (0.0)
+    _buttonsFadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.8, curve: Curves.easeInOut), 
+      ),
+    );
+
+    // 2. Initialize Form Data
+    nameController = TextEditingController(text: widget.profile.name);
+    facultyController = TextEditingController(text: widget.profile.faculty);
+    programController = TextEditingController(text: widget.profile.program ?? '');
+    phoneNumberController = TextEditingController(text: widget.profile.phoneNumber);
+    vehicleModelController = TextEditingController(text: widget.profile.vehicleDetails?.model ?? '');
+    plateNumberController = TextEditingController(text: widget.profile.vehicleDetails?.plateNumber ?? '');
+
+    selectedRole = widget.profile.role;
+    selectedContactMethod = widget.profile.contactMethod;
+    isVehicleOwner = widget.profile.isVehicleOwner;
+    maxSeats = widget.profile.vehicleDetails?.maxSeats ?? 4;
   }
 
   @override
   void dispose() {
-    nameController.dispose();
-    programController.dispose();
-    contactValueController.dispose();
-    vehicleModelController.dispose();
-    vehiclePlateController.dispose();
     _animationController.dispose();
+    nameController.dispose();
+    facultyController.dispose();
+    programController.dispose();
+    phoneNumberController.dispose();
+    vehicleModelController.dispose();
+    plateNumberController.dispose();
     super.dispose();
   }
 
@@ -87,18 +106,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   bool isFormValid() {
     if (nameController.text.trim().isEmpty ||
-        programController.text.trim().isEmpty ||
-        contactValueController.text.trim().isEmpty) {
+        facultyController.text.trim().isEmpty ||
+        phoneNumberController.text.trim().isEmpty) {
       return false;
     }
-    
-    if (hasVehicle) {
+    if (selectedRole == 'Student' && programController.text.trim().isEmpty) {
+      return false;
+    }
+    if (isVehicleOwner) {
       if (vehicleModelController.text.trim().isEmpty ||
-          vehiclePlateController.text.trim().isEmpty) {
+          plateNumberController.text.trim().isEmpty) {
         return false;
       }
     }
-    
     return true;
   }
 
@@ -106,23 +126,33 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     if (!isFormValid()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please fill in all required fields'),
+          content: Text('Please fill in all required fields correctly.'),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
-    
+
+    final vehicleDetails = isVehicleOwner
+        ? VehicleDetails(
+            model: vehicleModelController.text,
+            plateNumber: plateNumberController.text.toUpperCase(),
+            maxSeats: maxSeats,
+          )
+        : null;
+
     final updatedProfile = UserProfile(
+      id: widget.profile.id,
       name: nameController.text,
-      program: programController.text,
+      role: selectedRole,
+      faculty: facultyController.text,
+      program: programController.text.isEmpty ? null : programController.text,
       contactMethod: selectedContactMethod,
-      contactValue: contactValueController.text,
-      hasVehicle: hasVehicle,
-      vehicleModel: hasVehicle ? vehicleModelController.text : null,
-      vehiclePlate: hasVehicle ? vehiclePlateController.text.toUpperCase() : null,
+      phoneNumber: phoneNumberController.text,
+      isVehicleOwner: isVehicleOwner,
+      vehicleDetails: vehicleDetails,
     );
-    
+
     widget.onSaveProfile(updatedProfile);
     
     setState(() {
@@ -146,23 +176,27 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       backgroundColor: const Color(0xFFF4F6FA),
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
           child: Center(
             child: Container(
               constraints: const BoxConstraints(maxWidth: 400),
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  // Logo with animation
+                  
+                  // 1. RESTORED: Your Original Logo Logic (Animated)
                   ScaleTransition(
-                    scale: _scaleAnimation,
+                    scale: _logoScaleAnimation,
                     child: Container(
                       margin: const EdgeInsets.only(top: 16),
+                      // This uses your original image logic
                       child: Image.asset(
                         'assets/images/logo.png',
-                        width: 320,
+                        width: 320, 
                         height: 320,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) {
+                          // Only shows this blue box if image fails to load
                           return Container(
                             width: 320,
                             height: 320,
@@ -181,63 +215,63 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
                   
-                  const SizedBox(height: 32),
-                  
-                  // Action Buttons (hidden when profile is expanded)
-                  if (!isProfileExpanded) ...[
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: widget.onFindRide,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2B67F6),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                  // 2. Animated Buttons Section
+                  SizeTransition(
+                    sizeFactor: _buttonsFadeAnimation,
+                    axisAlignment: -1.0, 
+                    child: FadeTransition(
+                      opacity: _buttonsFadeAnimation,
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 32),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: ElevatedButton(
+                              onPressed: widget.onFindRide,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2B67F6),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'Find a Ride',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                              ),
+                            ),
                           ),
-                        ),
-                        child: const Text(
-                          'Find a Ride',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: ElevatedButton(
+                              onPressed: widget.onOfferRide,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF4CAF50),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'Offer a Ride',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 32),
+                        ],
                       ),
                     ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: widget.onOfferRide,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4CAF50),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Offer a Ride',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                  ],
+                  ),
                   
-                  // Profile Section - Collapsible
-                  Container(
+                  // 3. Profile Section
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
@@ -251,7 +285,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                     child: Column(
                       children: [
-                        // Profile Header Button
+                        // Profile Header
                         InkWell(
                           onTap: toggleProfile,
                           borderRadius: BorderRadius.circular(12),
@@ -265,25 +299,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                     color: Color(0xFF2B67F6),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Icon(
-                                    Icons.person,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
+                                  child: const Icon(Icons.person, color: Colors.white, size: 20),
                                 ),
                                 const SizedBox(width: 12),
                                 const Text(
                                   'My Profile',
                                   style: TextStyle(
                                     fontSize: 16,
+                                    fontWeight: FontWeight.w500,
                                     color: Color(0xFF111827),
                                   ),
                                 ),
                                 const Spacer(),
                                 Icon(
-                                  isProfileExpanded
-                                      ? Icons.keyboard_arrow_up
-                                      : Icons.keyboard_arrow_down,
+                                  isProfileExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                                   color: const Color(0xFF6B7280),
                                 ),
                               ],
@@ -291,85 +320,87 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           ),
                         ),
                         
-                        // Collapsible Profile Content
+                        // Expanded Form Content
                         if (isProfileExpanded) ...[
                           const Divider(height: 1),
                           Padding(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(24),
                             child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Success Message
                                 if (showSuccess)
                                   Container(
                                     margin: const EdgeInsets.only(bottom: 16),
-                                    padding: const EdgeInsets.all(16),
+                                    padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFF4CAF50),
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: const Text(
-                                      'Profile updated successfully!',
-                                      style: TextStyle(color: Colors.white),
-                                      textAlign: TextAlign.center,
+                                    child: const Center(
+                                      child: Text(
+                                        'Profile Saved Successfully!',
+                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                      ),
                                     ),
                                   ),
-                                
-                                // Personal Information Section
+
+                                // -- Personal Info --
                                 _buildSectionHeader('Personal Information', Icons.person),
                                 const SizedBox(height: 16),
-                                
                                 _buildTextField(
                                   controller: nameController,
                                   label: 'Full Name',
                                   placeholder: 'e.g., Ahmad Bin Ali',
                                 ),
                                 const SizedBox(height: 16),
-                                
-                                _buildTextField(
-                                  controller: programController,
-                                  label: 'Program',
-                                  placeholder: 'e.g., Computer Science',
+                                _buildDropdown(
+                                  label: 'Role',
+                                  value: selectedRole,
+                                  items: const ['Student', 'Lecturer', 'Staff', 'Other'],
+                                  onChanged: (val) => setState(() => selectedRole = val!),
                                 ),
                                 const SizedBox(height: 16),
-                                
                                 _buildTextField(
-                                  controller: contactValueController,
+                                  controller: facultyController,
+                                  label: 'Faculty',
+                                  placeholder: 'e.g., Faculty of Computing',
+                                ),
+                                const SizedBox(height: 16),
+                                if (selectedRole == 'Student') ...[
+                                  _buildTextField(
+                                    controller: programController,
+                                    label: 'Program',
+                                    placeholder: 'e.g., Computer Science',
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+                                _buildTextField(
+                                  controller: phoneNumberController,
                                   label: 'Phone Number',
                                   placeholder: '+60123456789',
+                                  inputType: TextInputType.phone,
                                 ),
                                 const SizedBox(height: 16),
-                                
                                 _buildDropdown(
                                   label: 'Preferred Contact Method',
                                   value: selectedContactMethod,
-                                  items: ['WhatsApp', 'Telegram', 'Phone Call', 'SMS/Message'],
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedContactMethod = value!;
-                                    });
-                                  },
+                                  items: const ['WhatsApp', 'Telegram', 'Phone', 'SMS/Message'],
+                                  onChanged: (val) => setState(() => selectedContactMethod = val!),
                                 ),
-                                
                                 const SizedBox(height: 24),
-                                
-                                // Vehicle Information Section
+
+                                // -- Vehicle Info --
                                 _buildSectionHeader('Vehicle Information', Icons.directions_car),
-                                const SizedBox(height: 16),
-                                
+                                const SizedBox(height: 8),
                                 CheckboxListTile(
-                                  value: hasVehicle,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      hasVehicle = value!;
-                                    });
-                                  },
+                                  value: isVehicleOwner,
+                                  onChanged: (val) => setState(() => isVehicleOwner = val ?? false),
                                   title: const Text('I own a vehicle and can offer rides'),
-                                  controlAffinity: ListTileControlAffinity.leading,
                                   contentPadding: EdgeInsets.zero,
                                   activeColor: const Color(0xFF2B67F6),
+                                  controlAffinity: ListTileControlAffinity.leading,
                                 ),
-                                
-                                if (hasVehicle) ...[
+                                if (isVehicleOwner) ...[
                                   const SizedBox(height: 16),
                                   _buildTextField(
                                     controller: vehicleModelController,
@@ -378,13 +409,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                   ),
                                   const SizedBox(height: 16),
                                   _buildTextField(
-                                    controller: vehiclePlateController,
-                                    label: 'License Plate Number',
-                                    placeholder: 'e.g., TER 1234',
+                                    controller: plateNumberController,
+                                    label: 'License Plate',
+                                    placeholder: 'e.g., ABC 1234',
                                     uppercase: true,
                                   ),
+                                  const SizedBox(height: 16),
+                                  _buildDropdown(
+                                    label: 'Max Seats',
+                                    value: maxSeats.toString(),
+                                    items: const ['1', '2', '3', '4', '5', '6', '7'],
+                                    onChanged: (val) => setState(() => maxSeats = int.parse(val!)),
+                                  ),
                                 ],
-                                
                                 const SizedBox(height: 24),
                                 
                                 // Save Button
@@ -392,19 +429,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                   width: double.infinity,
                                   height: 48,
                                   child: ElevatedButton.icon(
-                                    onPressed: isFormValid() ? handleSave : null,
+                                    onPressed: handleSave,
                                     icon: const Icon(Icons.save),
-                                    label: const Text(
-                                      'Save Profile',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
+                                    label: const Text('Save Profile'),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFF2B67F6),
                                       foregroundColor: Colors.white,
-                                      disabledBackgroundColor: Colors.grey[300],
                                       elevation: 0,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
@@ -419,7 +449,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ],
                     ),
                   ),
-                  
                   const SizedBox(height: 48),
                 ],
               ),
@@ -430,25 +459,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
+  // --- UI Helpers ---
   Widget _buildSectionHeader(String title, IconData icon) {
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: icon == Icons.person ? const Color(0xFF2B67F6) : const Color(0xFF4CAF50),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: Colors.white, size: 24),
-        ),
-        const SizedBox(width: 12),
+        Icon(icon, color: const Color(0xFF2B67F6), size: 20),
+        const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF111827),
-          ),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1F2937)),
         ),
       ],
     );
@@ -459,46 +478,28 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     required String label,
     required String placeholder,
     bool uppercase = false,
+    TextInputType inputType = TextInputType.text,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        RichText(
-          text: TextSpan(
-            text: label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF374151),
-            ),
-            children: const [
-              TextSpan(
-                text: ' *',
-                style: TextStyle(color: Colors.red),
-              ),
-            ],
-          ),
+        Text(
+          '$label *',
+          style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563), fontWeight: FontWeight.w500),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         TextField(
           controller: controller,
-          textCapitalization: uppercase ? TextCapitalization.characters : TextCapitalization.none,
+          keyboardType: inputType,
+          textCapitalization: uppercase ? TextCapitalization.characters : TextCapitalization.sentences,
           decoration: InputDecoration(
             hintText: placeholder,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF2B67F6), width: 2),
-            ),
+            hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFD1D5DB))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFD1D5DB))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFF2B67F6), width: 1.5)),
           ),
-          onChanged: (_) => setState(() {}),
         ),
       ],
     );
@@ -513,38 +514,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        RichText(
-          text: TextSpan(
-            text: label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF374151),
-            ),
-            children: const [
-              TextSpan(
-                text: ' *',
-                style: TextStyle(color: Colors.red),
-              ),
-            ],
-          ),
+        Text(
+          '$label *',
+          style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563), fontWeight: FontWeight.w500),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFD1D5DB)),
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(border: Border.all(color: const Color(0xFFD1D5DB)), borderRadius: BorderRadius.circular(8)),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: value,
               isExpanded: true,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              borderRadius: BorderRadius.circular(12),
               items: items.map((String item) {
-                return DropdownMenuItem<String>(
-                  value: item,
-                  child: Text(item),
-                );
+                return DropdownMenuItem<String>(value: item, child: Text(item));
               }).toList(),
               onChanged: onChanged,
             ),
