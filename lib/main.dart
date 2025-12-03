@@ -3,7 +3,7 @@ import 'screens/home_screen.dart';
 import 'screens/ride_listings_screen.dart';
 import 'screens/create_offer_screen.dart';
 import 'screens/create_request_screen.dart';
-import 'screens/ride_details_screen.dart';
+// import 'screens/ride_details_screen.dart';
 import 'models/ride.dart';
 import 'models/user.dart';
 
@@ -43,10 +43,10 @@ class _RideShareAppState extends State<RideShareApp> {
   // Business Logic: List storage for rides
   List<RideOffer> offers = [];
   List<RideRequest> requests = [];
-  
+
   // User profile
   UserProfile? userProfile;
-  
+
   // Current screen state
   String currentScreen = 'home';
   String? selectedRideId;
@@ -55,17 +55,15 @@ class _RideShareAppState extends State<RideShareApp> {
   @override
   void initState() {
     super.initState();
-    
-    // 1. Initialize with a complete UMT Student Profile
+    // Initialize with sample user profile
     userProfile = UserProfile(
       id: 'u1',
       name: 'Alfan Na Im bin Shabaruddin',
       role: 'Student',
-      matricNumber: 'S58492',
+      matricNumber: 'S72505',
       gender: 'Male',
       faculty: 'Faculty of Computer Science and Mathematics',
       program: 'Mobile Computing',
-      // department: null, // Not needed for student
       contactMethod: 'WhatsApp',
       phoneNumber: '+601124181384',
       isVehicleOwner: true,
@@ -77,102 +75,106 @@ class _RideShareAppState extends State<RideShareApp> {
       ),
     );
 
-    // 2. Align Mock Data with UMT Context
-    // We update driverInfo/requesterInfo to match the style of the new profile data
-    
+    // Add sample data for testing - 5 Ride Offers
+    // Updated locations to match the new UMT specific list
     offers.addAll([
       RideOffer(
-        pickup: 'KTS',
-        destination: 'Library',
-        time: '5:30 PM',
+        pickup: 'Kompleks Siswa',
+        destination: 'PSNZ',
+        time: '05:30 PM',
         seats: 2,
         driverName: 'Aiman',
-        driverInfo: 'Student • Faculty of Ocean Engineering Technology',
+        driverInfo:
+            'Student • Faculty of Ocean Engineering Technology\nVehicle: Perodua Axia (VAA 1234)',
         costSharing: 'RM 2.00',
       ),
       RideOffer(
-        pickup: 'Residential College',
-        destination: 'Mydin',
-        time: '2:00 PM',
+        pickup: 'Kolej Kediaman',
+        destination: 'Kafe Limbong',
+        time: '02:00 PM',
         seats: 3,
         driverName: 'Nurul',
-        driverInfo: 'Student • Faculty of Science and Marine Environment',
-        costSharing: 'RM 3.00',
-      ),
-      RideOffer(
-        pickup: 'Campus Gate',
-        destination: 'Kuala Terengganu',
-        time: '4:15 PM',
-        seats: 1,
-        driverName: 'Dr. Ahmad',
-        driverInfo: 'Lecturer • Faculty of Maritime Studies',
-        costSharing: 'RM 5.00',
-      ),
-      RideOffer(
-        pickup: 'Library',
-        destination: 'Lecture Hall A',
-        time: '8:00 AM',
-        seats: 4,
-        driverName: 'Siti',
-        driverInfo: 'Student • Faculty of Fisheries and Food Science',
+        driverInfo:
+            'Student • Faculty of Science and Marine Environment\nVehicle: Proton Saga (WBB 8888)',
         costSharing: 'RM 1.00',
       ),
       RideOffer(
-        pickup: 'KTS',
-        destination: 'Mydin',
-        time: '1:30 PM',
+        pickup: 'Pusat Sukan dan Rekreasi',
+        destination: 'Kompleks Kuliah Berpusat',
+        time: '04:15 PM',
+        seats: 1,
+        driverName: 'Ahmad',
+        driverInfo:
+            'Student • Faculty of Maritime Studies\nVehicle: Yamaha Y15 (TCA 4567)',
+        costSharing: 'RM 3.00',
+      ),
+      RideOffer(
+        pickup: 'PSNZ',
+        destination: 'DSM',
+        time: '08:00 AM',
+        seats: 4,
+        driverName: 'Siti',
+        driverInfo: 'Staff • Library (PSNZ)\nVehicle: Honda City (VEE 9090)',
+        costSharing: 'RM 2.00',
+      ),
+      RideOffer(
+        pickup: 'KKSAM',
+        destination: 'INOS',
+        time: '01:30 PM',
         seats: 2,
         driverName: 'Zainal',
-        driverInfo: 'Staff • Development & Maintenance Department',
+        driverInfo:
+            'Lecturer • Faculty of Fisheries and Food Science\nVehicle: Toyota Vios (WVV 1111)',
         costSharing: 'Free',
       ),
     ]);
 
+    // Add sample data for testing - 5 Ride Requests
     requests.addAll([
       RideRequest(
-        pickup: 'Mydin',
-        destination: 'Campus Gate',
-        time: '6:00 PM',
+        pickup: 'Kafe Limbong',
+        destination: 'Kolej Kediaman',
+        time: '06:00 PM',
         riders: 2,
         requesterName: 'Hafiz',
-        requesterInfo: 'Student • Faculty of Business, Economics and Social Development',
-        notes: 'Can share costs, carrying groceries',
+        requesterInfo: 'Student • Faculty of Computer Science and Mathematics',
+        notes: 'Carrying heavy bags',
       ),
       RideRequest(
-        pickup: 'Residential College',
-        destination: 'Kuala Terengganu',
-        time: '3:30 PM',
+        pickup: 'Kompleks Siswa',
+        destination: 'Makmal Berpusat',
+        time: '03:30 PM',
         riders: 1,
         requesterName: 'Aina',
-        requesterInfo: 'Student • Faculty of Computer Science and Mathematics',
-        notes: 'Willing to pay RM 5',
+        requesterInfo: 'Student • Faculty of Science and Marine Environment',
+        notes: 'Willing to pay extra',
       ),
       RideRequest(
-        pickup: 'KTS',
-        destination: 'Mydin',
+        pickup: 'PPAL',
+        destination: 'UMTCC',
         time: '11:00 AM',
         riders: 3,
         requesterName: 'Yusof',
-        requesterInfo: 'Student • Faculty of Ocean Engineering Technology',
-        notes: 'Need ride for group shopping',
+        requesterInfo: 'Student • Faculty of Maritime Studies',
+        notes: 'Group discussion',
       ),
       RideRequest(
-        pickup: 'Library',
-        destination: 'Residential College',
-        time: '9:30 PM',
+        pickup: 'AKUATROP',
+        destination: 'PISM',
+        time: '09:30 PM',
         riders: 1,
         requesterName: 'Azlina',
-        requesterInfo: 'Student • Faculty of Maritime Studies',
-        notes: 'Late study session, female driver preferred',
+        requesterInfo: 'Student • Faculty of Fisheries and Food Science',
+        notes: 'Late lab session',
       ),
       RideRequest(
-        pickup: 'Campus Gate',
-        destination: 'Lecture Hall A',
-        time: '8:30 AM',
+        pickup: 'Kompleks Kuliah Berpusat',
+        destination: 'Kolej Kediaman',
+        time: '08:30 AM',
         riders: 2,
         requesterName: 'Daniel',
-        requesterInfo: 'Student • Faculty of Fisheries and Food Science',
-        notes: 'Morning class, willing to pay RM 2',
+        requesterInfo: 'Student • Faculty of Ocean Engineering Technology',
+        notes: 'Morning class, urgent',
       ),
     ]);
   }
@@ -253,18 +255,6 @@ class _RideShareAppState extends State<RideShareApp> {
           userProfile: userProfile,
           onBack: () => navigateTo('listings-offers'),
           onSubmit: handleCreateRequest,
-        );
-
-      case 'details':
-        final ride = selectedRideType == 'offer'
-            ? offers.firstWhere((o) => o.id == selectedRideId)
-            : requests.firstWhere((r) => r.id == selectedRideId);
-        return RideDetailsScreen(
-          type: selectedRideType!,
-          ride: ride,
-          onBack: () => navigateTo(
-            selectedRideType == 'offer' ? 'listings-offers' : 'listings-requests',
-          ),
         );
 
       default:

@@ -87,18 +87,26 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
           SafeArea(
             child: Column(
               children: [
-                // --- STICKY HEADER (Fixed: Removed Circle) ---
+                // --- STICKY HEADER (Updated with Circle) ---
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   child: Row(
                     children: [
-                      IconButton(
-                        onPressed: widget.onBack,
-                        icon: const Icon(Icons.arrow_back),
-                        color: const Color(0xFF1F2937),
-                        iconSize: 24,
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))
+                          ]
+                        ),
+                        child: IconButton(
+                          onPressed: widget.onBack,
+                          icon: const Icon(Icons.arrow_back),
+                          color: const Color(0xFF1F2937),
+                        ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 16),
                       const Text(
                         'Create Request',
                         style: TextStyle(
@@ -174,7 +182,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                             ),
                             const SizedBox(height: 16),
 
-                            // NEW: Dropdown for Riders
+                            // Dropdown for Riders
                             _buildDropdownField(
                               label: 'Number of Riders',
                               value: riders.toString(),
@@ -310,7 +318,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
           value: value,
           icon: const Icon(Icons.keyboard_arrow_down),
           decoration: _inputDecoration('Select', icon),
-          items: items.map((l) => DropdownMenuItem(value: l, child: Text(l))).toList(),
+          items: items.map((l) => DropdownMenuItem(value: l, child: Text(l, overflow: TextOverflow.ellipsis))).toList(),
           onChanged: onChanged,
           validator: validator,
         ),

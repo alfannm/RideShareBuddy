@@ -88,19 +88,26 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
           SafeArea(
             child: Column(
               children: [
-                // --- HEADER (Fixed: Removed Circle Background) ---
+                // --- STICKY HEADER (Updated with Circle) ---
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   child: Row(
                     children: [
-                      IconButton(
-                        onPressed: widget.onBack,
-                        icon: const Icon(Icons.arrow_back),
-                        color: const Color(0xFF1F2937),
-                        iconSize: 24,
-                        // Removed the Container decoration here
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))
+                          ]
+                        ),
+                        child: IconButton(
+                          onPressed: widget.onBack,
+                          icon: const Icon(Icons.arrow_back),
+                          color: const Color(0xFF1F2937),
+                        ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 16),
                       const Text(
                         'Create Ride Offer',
                         style: TextStyle(
@@ -176,13 +183,13 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                             ),
                             const SizedBox(height: 16),
 
-                            // NEW: Dropdown for Seats instead of Text Field
+                            // Dropdown for Seats
                             _buildDropdownField(
                               label: 'Available Seats',
                               value: seats.toString(),
                               items: seatOptions,
                               onChanged: (v) => setState(() => seats = int.parse(v!)),
-                              validator: null, // Always has a value
+                              validator: null, 
                               icon: Icons.event_seat,
                             ),
                             
@@ -329,7 +336,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
           value: value,
           icon: const Icon(Icons.keyboard_arrow_down),
           decoration: _inputDecoration('Select', icon),
-          items: items.map((l) => DropdownMenuItem(value: l, child: Text(l))).toList(),
+          items: items.map((l) => DropdownMenuItem(value: l, child: Text(l, overflow: TextOverflow.ellipsis))).toList(),
           onChanged: onChanged,
           validator: validator,
         ),
