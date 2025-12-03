@@ -30,9 +30,28 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
   int riders = 1; // Default value
   String notes = '';
 
+  // Updated UMT Locations List
   final List<String> locationOptions = [
-    'KTS', 'Library', 'Residential College', 'Campus Gate', 
-    'Lecture Hall A', 'Mydin', 'Kuala Terengganu',
+    'Faculty of Computer Science and Mathematics',
+    'Faculty of Fisheries and Food Science',
+    'Faculty of Ocean Engineering Technology',
+    'Faculty of Maritime Studies',
+    'Faculty of Business, Economics and Social Development',
+    'Faculty of Science and Marine Environment',
+    'DSM',
+    'Kolej Kediaman',
+    'Kafe Limbong',
+    'KKSAM',
+    'Pusat Sukan dan Rekreasi',
+    'Kompleks Siswa',
+    'PISM',
+    'PSNZ',
+    'INOS',
+    'AKUATROP',
+    'PPAL',
+    'UMTCC',
+    'Makmal Berpusat',
+    'Kompleks Kuliah Berpusat',
   ];
 
   // Generate list '1' to '9'
@@ -53,13 +72,18 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
       }
       _formKey.currentState!.save();
 
+      // Construct rich requester info string
+      String requesterDetails = widget.userProfile != null 
+          ? '${widget.userProfile!.role} • ${widget.userProfile!.faculty ?? widget.userProfile!.department ?? "UMT"}'
+          : 'Anonymous';
+
       final request = RideRequest(
         pickup: pickup,
         destination: destination,
         time: time,
         riders: riders,
         requesterName: widget.userProfile?.name ?? 'Anonymous',
-        requesterInfo: widget.userProfile?.getContactInfo() ?? 'No contact info',
+        requesterInfo: requesterDetails,
         notes: notes.isEmpty ? null : notes,
       );
 
@@ -87,7 +111,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
           SafeArea(
             child: Column(
               children: [
-                // --- STICKY HEADER (Updated with Circle) ---
+                // --- STICKY HEADER ---
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   child: Row(
@@ -321,6 +345,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
           items: items.map((l) => DropdownMenuItem(value: l, child: Text(l, overflow: TextOverflow.ellipsis))).toList(),
           onChanged: onChanged,
           validator: validator,
+          isExpanded: true, // Handles long text
         ),
       ],
     );

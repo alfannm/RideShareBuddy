@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/ride.dart';
@@ -27,16 +26,34 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   String pickup = '';
   String destination = '';
   String time = '';
-  int seats = 1; // Default value for dropdown
+  int seats = 1;
   bool isFree = true;
   String costAmount = '';
 
+  // Updated UMT Locations List
   final List<String> locationOptions = [
-    'KTS', 'Library', 'Residential College', 'Campus Gate', 
-    'Lecture Hall A', 'Mydin', 'Kuala Terengganu',
+    'Faculty of Computer Science and Mathematics',
+    'Faculty of Fisheries and Food Science',
+    'Faculty of Ocean Engineering Technology',
+    'Faculty of Maritime Studies',
+    'Faculty of Business, Economics and Social Development',
+    'Faculty of Science and Marine Environment',
+    'DSM',
+    'Kolej Kediaman',
+    'Kafe Limbong',
+    'KKSAM',
+    'Pusat Sukan dan Rekreasi',
+    'Kompleks Siswa',
+    'PISM',
+    'PSNZ',
+    'INOS',
+    'AKUATROP',
+    'PPAL',
+    'UMTCC',
+    'Makmal Berpusat',
+    'Kompleks Kuliah Berpusat',
   ];
 
-  // Generate list of strings '1' to '9'
   final List<String> seatOptions = List.generate(9, (index) => (index + 1).toString());
 
   String? validateRequired(String? value, String fieldName) {
@@ -53,6 +70,14 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
         return;
       }
       _formKey.currentState!.save();
+      
+      String driverDetails = widget.userProfile != null 
+          ? '${widget.userProfile!.role} • ${widget.userProfile!.faculty ?? widget.userProfile!.department ?? "UMT"}'
+          : 'Anonymous';
+
+      if (widget.userProfile?.vehicleDetails != null) {
+        driverDetails += '\nVehicle: ${widget.userProfile!.vehicleDetails!.model} (${widget.userProfile!.vehicleDetails!.plateNumber})';
+      }
 
       final offer = RideOffer(
         pickup: pickup,
@@ -60,8 +85,8 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
         time: time,
         seats: seats,
         driverName: widget.userProfile?.name ?? 'Anonymous',
-        driverInfo: widget.userProfile?.getContactInfo() ?? 'No contact info',
-        costSharing: isFree ? 'Free' : 'RM$costAmount',
+        driverInfo: driverDetails,
+        costSharing: isFree ? 'Free' : 'RM $costAmount',
       );
 
       widget.onSubmit(offer);
@@ -88,7 +113,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
           SafeArea(
             child: Column(
               children: [
-                // --- STICKY HEADER (Updated with Circle) ---
+                // --- STICKY HEADER ---
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   child: Row(
@@ -108,12 +133,14 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      const Text(
-                        'Create Ride Offer',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1F2937),
+                      const Expanded(
+                        child: Text(
+                          'Create Ride Offer',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1F2937),
+                          ),
                         ),
                       ),
                     ],
@@ -183,13 +210,12 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                             ),
                             const SizedBox(height: 16),
 
-                            // Dropdown for Seats
                             _buildDropdownField(
                               label: 'Available Seats',
                               value: seats.toString(),
                               items: seatOptions,
                               onChanged: (v) => setState(() => seats = int.parse(v!)),
-                              validator: null, 
+                              validator: null,
                               icon: Icons.event_seat,
                             ),
                             
@@ -339,6 +365,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
           items: items.map((l) => DropdownMenuItem(value: l, child: Text(l, overflow: TextOverflow.ellipsis))).toList(),
           onChanged: onChanged,
           validator: validator,
+          isExpanded: true, // Important for long text
         ),
       ],
     );
