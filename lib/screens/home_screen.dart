@@ -27,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   late AnimationController _animationController;
   late Animation<double> _logoScaleAnimation;
   late Animation<double> _buttonsFadeAnimation;
-  late Animation<double> _profileExpandAnimation; // New animation for smooth collapse
+  late Animation<double> _profileExpandAnimation;
   
   // --- Form Controllers ---
   late TextEditingController nameController;
@@ -69,7 +69,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
 
     // Animation for Profile Content: Expands from 0.0 to 1.0
-    // This allows the profile to collapse smoothly instead of disappearing instantly
     _profileExpandAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
@@ -332,9 +331,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           ),
                         ),
                         
-                        // 4. Expanded Form Content (Wrapped in SizeTransition for smooth collapse)
-                        // We removed "if (isProfileExpanded)" so the widget stays in the tree
-                        // and animates its size down to 0 when closed.
+                        // 4. Expanded Form Content
                         SizeTransition(
                           sizeFactor: _profileExpandAnimation,
                           axisAlignment: -1.0,
@@ -427,31 +424,40 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                     
                                     const SizedBox(height: 24),
 
-                                    // 5. SUCCESS MESSAGE (Moved Here)
-                                    // Using AnimatedSwitcher for smooth appearance/disappearance
-                                    AnimatedSwitcher(
+                                    // 5. SUCCESS MESSAGE (AnimatedSize + AnimatedOpacity)
+                                    // This is the new animation block you requested
+                                    AnimatedSize(
                                       duration: const Duration(milliseconds: 300),
-                                      transitionBuilder: (Widget child, Animation<double> animation) {
-                                        return FadeTransition(opacity: animation, child: SizeTransition(sizeFactor: animation, axisAlignment: -1.0, child: child));
-                                      },
-                                      child: showSuccess
-                                          ? Container(
-                                              key: const ValueKey('success_message'),
-                                              width: double.infinity,
-                                              margin: const EdgeInsets.only(bottom: 16),
-                                              padding: const EdgeInsets.all(12),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFF4CAF50),
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                              child: const Center(
-                                                child: Text(
-                                                  'Profile Saved Successfully!',
-                                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                      curve: Curves.easeInOut,
+                                      child: AnimatedOpacity(
+                                        duration: const Duration(milliseconds: 300),
+                                        opacity: showSuccess ? 1.0 : 0.0,
+                                        child: showSuccess
+                                            ? Container(
+                                                margin: const EdgeInsets.only(bottom: 16),
+                                                padding: const EdgeInsets.all(12),
+                                                width: double.infinity,
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFF4CAF50),
+                                                  borderRadius: BorderRadius.circular(8),
                                                 ),
-                                              ),
-                                            )
-                                          : const SizedBox.shrink(key: ValueKey('empty')),
+                                                child: const Row(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    Icon(Icons.check_circle, color: Colors.white, size: 20),
+                                                    SizedBox(width: 8),
+                                                    Text(
+                                                      'Profile Saved Successfully!',
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              )
+                                            : const SizedBox.shrink(),
+                                      ),
                                     ),
                                     
                                     // Save Button
