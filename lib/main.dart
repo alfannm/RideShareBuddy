@@ -55,17 +55,17 @@ class _RideShareAppState extends State<RideShareApp> {
   @override
   void initState() {
     super.initState();
-    // Initialize with sample user profile (Updated for Version 2 Model)
+    // Initialize with sample user profile
     userProfile = UserProfile(
-      id: 'u1', // New field
+      id: 'u1',
       name: 'Alfan Na Im bin Shabaruddin',
-      role: 'Student', // New field
-      faculty: 'Faculty of Computer Science and Mathematics', // New field
+      role: 'Student',
+      faculty: 'Faculty of Computer Science and Mathematics',
       program: 'BCS. Mobile Computing',
-      contactMethod: 'WhatsApp', // Changed from contactType
-      phoneNumber: '+601124181384', // Changed from contactValue
-      isVehicleOwner: true, // Changed from hasVehicle
-      vehicleDetails: VehicleDetails( // New nested object
+      contactMethod: 'WhatsApp',
+      phoneNumber: '+601124181384',
+      isVehicleOwner: true,
+      vehicleDetails: VehicleDetails(
         model: 'Yamaha 135LC Fi',
         plateNumber: 'VJH 5198',
         maxSeats: 1,
@@ -211,8 +211,8 @@ class _RideShareAppState extends State<RideShareApp> {
         return HomeScreen(
           onFindRide: () => navigateTo('listings-offers'),
           onOfferRide: () => navigateTo('listings-requests'),
-          profile: userProfile!,
-          onSaveProfile: handleSaveProfile,
+          profile: userProfile!, // Fixed: Added profile
+          onSaveProfile: handleSaveProfile, // Fixed: Added save function
         );
 
       case 'listings-offers':
@@ -262,6 +262,7 @@ class _RideShareAppState extends State<RideShareApp> {
         );
 
       default:
+        // FIX: The error was here. We added the missing parameters.
         return HomeScreen(
           onFindRide: () => navigateTo('listings-offers'),
           onOfferRide: () => navigateTo('listings-requests'),
