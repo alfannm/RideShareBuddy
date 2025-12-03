@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/ride.dart';
 import '../models/user.dart';
+import 'home_screen.dart'; // Imports FluidBackgroundPainter
 
 class CreateOfferScreen extends StatefulWidget {
   final UserProfile? userProfile;
@@ -26,7 +27,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   String pickup = '';
   String destination = '';
   String time = '';
-  int seats = 1;
+  int seats = 1; // Default value for dropdown
   bool isFree = true;
   String costAmount = '';
 
@@ -35,14 +36,11 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     'Lecture Hall A', 'Mydin', 'Kuala Terengganu',
   ];
 
+  // Generate list of strings '1' to '9'
+  final List<String> seatOptions = List.generate(9, (index) => (index + 1).toString());
+
   String? validateRequired(String? value, String fieldName) {
     if (value == null || value.isEmpty) return '$fieldName is required';
-    return null;
-  }
-
-  String? validateSeats(String? value) {
-    if (value == null || value.isEmpty) return 'Seats is required';
-    if (int.tryParse(value) == null) return 'Invalid number';
     return null;
   }
 
@@ -90,26 +88,19 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
           SafeArea(
             child: Column(
               children: [
-                // --- STICKY HEADER ---
+                // --- HEADER (Fixed: Removed Circle Background) ---
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   child: Row(
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))
-                          ]
-                        ),
-                        child: IconButton(
-                          onPressed: widget.onBack,
-                          icon: const Icon(Icons.arrow_back),
-                          color: const Color(0xFF1F2937),
-                        ),
+                      IconButton(
+                        onPressed: widget.onBack,
+                        icon: const Icon(Icons.arrow_back),
+                        color: const Color(0xFF1F2937),
+                        iconSize: 24,
+                        // Removed the Container decoration here
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 8),
                       const Text(
                         'Create Ride Offer',
                         style: TextStyle(
@@ -185,12 +176,13 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                             ),
                             const SizedBox(height: 16),
 
-                            _buildInputField(
+                            // NEW: Dropdown for Seats instead of Text Field
+                            _buildDropdownField(
                               label: 'Available Seats',
-                              initialValue: '1',
-                              inputType: TextInputType.number,
-                              validator: validateSeats,
-                              onSaved: (v) => seats = int.parse(v ?? '1'),
+                              value: seats.toString(),
+                              items: seatOptions,
+                              onChanged: (v) => setState(() => seats = int.parse(v!)),
+                              validator: null, // Always has a value
                               icon: Icons.event_seat,
                             ),
                             
@@ -198,7 +190,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                             _buildSectionTitle('Pricing'),
                             const SizedBox(height: 12),
 
-                            // Custom Toggle for Cost Styling
                             Container(
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF3F4F6),
@@ -218,7 +209,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                               _buildInputField(
                                 label: 'Cost Amount (RM)',
                                 placeholder: 'e.g. 5.00',
-                                inputType: TextInputType.numberWithOptions(decimal: true),
+                                inputType: const TextInputType.numberWithOptions(decimal: true),
                                 icon: Icons.attach_money,
                                 validator: (v) => (!isFree && (v == null || v.isEmpty)) ? 'Required' : null,
                                 onSaved: (v) => costAmount = v ?? '',
@@ -259,7 +250,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     );
   }
 
-  // --- Helper Widgets for Styling ---
+  // --- Helper Widgets ---
 
   Widget _buildSectionTitle(String title) {
     return Text(
@@ -284,7 +275,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('$label *', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey[700])),
+        Text('$label ${validator != null ? "*" : ""}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey[700])),
         const SizedBox(height: 8),
         TextFormField(
           initialValue: initialValue,
@@ -399,47 +390,4 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       ),
     );
   }
-}
-
-// --- Shared Fluid Wave Background Painter ---
-class FluidBackgroundPainter extends CustomPainter {
-  final double animationValue;
-  FluidBackgroundPainter({required this.animationValue});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint();
-    const double twoPi = 2 * math.pi;
-
-    // Wave 1 (Back/Top)
-    paint.color = const Color(0xFFBBDEFB).withOpacity(0.3);
-    _drawWave(canvas, size, paint, baselineY: size.height * 0.25, amplitude: 20, speedMultiplier: 1.0 * twoPi, offset: 0);
-    // Wave 2
-    paint.color = const Color(0xFF90CAF9).withOpacity(0.3);
-    _drawWave(canvas, size, paint, baselineY: size.height * 0.4, amplitude: 25, speedMultiplier: 1.3 * twoPi, offset: math.pi / 4);
-    // Wave 3
-    paint.color = const Color(0xFF64B5F6).withOpacity(0.35);
-    _drawWave(canvas, size, paint, baselineY: size.height * 0.55, amplitude: 30, speedMultiplier: 1.6 * twoPi, offset: math.pi / 2);
-    // Wave 4
-    paint.color = const Color(0xFF42A5F5).withOpacity(0.35);
-    _drawWave(canvas, size, paint, baselineY: size.height * 0.7, amplitude: 35, speedMultiplier: 2.0 * twoPi, offset: math.pi);
-    // Wave 5 (Front/Bottom)
-    paint.color = const Color(0xFF1E88E5).withOpacity(0.4);
-    _drawWave(canvas, size, paint, baselineY: size.height * 0.85, amplitude: 40, speedMultiplier: 2.5 * twoPi, offset: math.pi * 1.5);
-  }
-
-  void _drawWave(Canvas canvas, Size size, Paint paint, {required double baselineY, required double amplitude, required double speedMultiplier, required double offset}) {
-    final path = Path();
-    path.moveTo(0, baselineY);
-    for (double i = 0; i <= size.width; i++) {
-      path.lineTo(i, baselineY + amplitude * math.sin((i / size.width * 2 * math.pi) + (animationValue * speedMultiplier) + offset));
-    }
-    path.lineTo(size.width, size.height);
-    path.lineTo(0, size.height);
-    path.close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant FluidBackgroundPainter oldDelegate) => oldDelegate.animationValue != animationValue;
 }
