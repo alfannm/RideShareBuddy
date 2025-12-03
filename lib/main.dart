@@ -211,8 +211,8 @@ class _RideShareAppState extends State<RideShareApp> {
         return HomeScreen(
           onFindRide: () => navigateTo('listings-offers'),
           onOfferRide: () => navigateTo('listings-requests'),
-          profile: userProfile!, // Fixed: Added profile
-          onSaveProfile: handleSaveProfile, // Fixed: Added save function
+          profile: userProfile!, 
+          onSaveProfile: handleSaveProfile, 
         );
 
       case 'listings-offers':
@@ -262,7 +262,7 @@ class _RideShareAppState extends State<RideShareApp> {
         );
 
       default:
-        // FIX: The error was here. We added the missing parameters.
+        // FIX: Added the missing profile arguments here
         return HomeScreen(
           onFindRide: () => navigateTo('listings-offers'),
           onOfferRide: () => navigateTo('listings-requests'),

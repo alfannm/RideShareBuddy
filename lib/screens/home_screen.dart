@@ -199,319 +199,317 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
           // 2. Main Content
           SafeArea(
-            // FIX: Using LayoutBuilder to solve the Yellow Stripe Overflow
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
                   physics: const ClampingScrollPhysics(),
-                  // FIX: ConstrainedBox ensures the content fills the screen height
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
                       minHeight: constraints.maxHeight,
                     ),
-                    // FIX: IntrinsicHeight allows vertical alignment
-                    child: IntrinsicHeight(
-                      child: Center(
-                        child: Container(
-                          constraints: const BoxConstraints(maxWidth: 400),
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: Column(
-                            // FIX: Center when closed, Top-align when open (prevents weird gaps)
-                            mainAxisAlignment: isProfileExpanded ? MainAxisAlignment.start : MainAxisAlignment.center,
-                            children: [
-                              const SizedBox(height: 24),
+                    // We remove IntrinsicHeight to fix the overflow error.
+                    // Instead, we use mainAxisAlignment to control positioning.
+                    child: Center(
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 400),
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          // When expanded: Start from top to allow scrolling.
+                          // When collapsed: Center vertically for dashboard look.
+                          mainAxisAlignment: isProfileExpanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 24),
 
-                              // Animated Logo
-                              ScaleTransition(
-                                scale: _logoScaleAnimation,
-                                child: Container(
-                                  child: Image.asset(
-                                    'assets/images/logo.png',
-                                    width: 320, 
-                                    height: 320,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        width: 320,
-                                        height: 320,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF2B67F6),
-                                          borderRadius: BorderRadius.circular(20),
-                                        ),
-                                        child: const Icon(
-                                          Icons.directions_car,
-                                          size: 120,
-                                          color: Colors.white,
-                                        ),
-                                      );
-                                    },
-                                  ),
+                            // Animated Logo
+                            ScaleTransition(
+                              scale: _logoScaleAnimation,
+                              child: Container(
+                                child: Image.asset(
+                                  'assets/images/logo.png',
+                                  width: 320, 
+                                  height: 320,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      width: 320,
+                                      height: 320,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF2B67F6),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: const Icon(
+                                        Icons.directions_car,
+                                        size: 120,
+                                        color: Colors.white,
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
-                              
-                              // Animated Buttons
-                              SizeTransition(
-                                sizeFactor: _buttonsFadeAnimation,
-                                axisAlignment: -1.0, 
-                                child: FadeTransition(
-                                  opacity: _buttonsFadeAnimation,
-                                  child: Column(
-                                    children: [
-                                      const SizedBox(height: 32),
-                                      SizedBox(
-                                        width: double.infinity,
-                                        height: 48,
-                                        child: ElevatedButton(
-                                          onPressed: widget.onFindRide,
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: const Color(0xFF2B67F6),
-                                            foregroundColor: Colors.white,
-                                            elevation: 2,
-                                            shadowColor: const Color(0xFF2B67F6).withOpacity(0.4),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                          ),
-                                          child: const Text(
-                                            'Find a Ride',
-                                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      SizedBox(
-                                        width: double.infinity,
-                                        height: 48,
-                                        child: ElevatedButton(
-                                          onPressed: widget.onOfferRide,
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: const Color(0xFF4CAF50),
-                                            foregroundColor: Colors.white,
-                                            elevation: 2,
-                                            shadowColor: const Color(0xFF4CAF50).withOpacity(0.4),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                          ),
-                                          child: const Text(
-                                            'Offer a Ride',
-                                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 32),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              
-                              // Profile Section
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.92), 
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
-                                      blurRadius: 15,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
+                            ),
+                            
+                            // Animated Buttons
+                            SizeTransition(
+                              sizeFactor: _buttonsFadeAnimation,
+                              axisAlignment: -1.0, 
+                              child: FadeTransition(
+                                opacity: _buttonsFadeAnimation,
                                 child: Column(
                                   children: [
-                                    // Header
-                                    InkWell(
-                                      onTap: toggleProfile,
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(8),
-                                              decoration: const BoxDecoration(
-                                                color: Color(0xFF2B67F6),
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: const Icon(Icons.person, color: Colors.white, size: 20),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            const Text(
-                                              'My Profile',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w500,
-                                                color: Color(0xFF111827),
-                                              ),
-                                            ),
-                                            const Spacer(),
-                                            Icon(
-                                              isProfileExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                                              color: const Color(0xFF6B7280),
-                                            ),
-                                          ],
+                                    const SizedBox(height: 32),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: 48,
+                                      child: ElevatedButton(
+                                        onPressed: widget.onFindRide,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFF2B67F6),
+                                          foregroundColor: Colors.white,
+                                          elevation: 2,
+                                          shadowColor: const Color(0xFF2B67F6).withOpacity(0.4),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'Find a Ride',
+                                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                                         ),
                                       ),
                                     ),
-                                    
-                                    // Form
-                                    SizeTransition(
-                                      sizeFactor: _profileExpandAnimation,
-                                      axisAlignment: -1.0,
-                                      child: Column(
+                                    const SizedBox(height: 16),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: 48,
+                                      child: ElevatedButton(
+                                        onPressed: widget.onOfferRide,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFF4CAF50),
+                                          foregroundColor: Colors.white,
+                                          elevation: 2,
+                                          shadowColor: const Color(0xFF4CAF50).withOpacity(0.4),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'Offer a Ride',
+                                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 32),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            
+                            // Profile Section
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.92), 
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  // Header
+                                  InkWell(
+                                    onTap: toggleProfile,
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Row(
                                         children: [
-                                          const Divider(height: 1),
-                                          Padding(
-                                            padding: const EdgeInsets.all(24),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                _buildSectionHeader('Personal Information', Icons.person),
-                                                const SizedBox(height: 16),
-                                                _buildTextField(
-                                                  controller: nameController,
-                                                  label: 'Full Name',
-                                                  placeholder: 'e.g., Ahmad Bin Ali',
-                                                ),
-                                                const SizedBox(height: 16),
-                                                _buildDropdown(
-                                                  label: 'Role',
-                                                  value: selectedRole,
-                                                  items: const ['Student', 'Lecturer', 'Staff', 'Other'],
-                                                  onChanged: (val) => setState(() => selectedRole = val!),
-                                                ),
-                                                const SizedBox(height: 16),
-                                                _buildTextField(
-                                                  controller: facultyController,
-                                                  label: 'Faculty',
-                                                  placeholder: 'e.g., Faculty of Computing',
-                                                ),
-                                                const SizedBox(height: 16),
-                                                if (selectedRole == 'Student') ...[
-                                                  _buildTextField(
-                                                    controller: programController,
-                                                    label: 'Program',
-                                                    placeholder: 'e.g., Computer Science',
-                                                  ),
-                                                  const SizedBox(height: 16),
-                                                ],
-                                                _buildTextField(
-                                                  controller: phoneNumberController,
-                                                  label: 'Phone Number',
-                                                  placeholder: '+60123456789',
-                                                  inputType: TextInputType.phone,
-                                                ),
-                                                const SizedBox(height: 16),
-                                                _buildDropdown(
-                                                  label: 'Preferred Contact Method',
-                                                  value: selectedContactMethod,
-                                                  items: const ['WhatsApp', 'Telegram', 'Phone', 'SMS/Message'],
-                                                  onChanged: (val) => setState(() => selectedContactMethod = val!),
-                                                ),
-                                                const SizedBox(height: 24),
-
-                                                _buildSectionHeader('Vehicle Information', Icons.directions_car),
-                                                const SizedBox(height: 8),
-                                                CheckboxListTile(
-                                                  value: isVehicleOwner,
-                                                  onChanged: (val) => setState(() => isVehicleOwner = val ?? false),
-                                                  title: const Text('I own a vehicle and can offer rides'),
-                                                  contentPadding: EdgeInsets.zero,
-                                                  activeColor: const Color(0xFF2B67F6),
-                                                  controlAffinity: ListTileControlAffinity.leading,
-                                                ),
-                                                if (isVehicleOwner) ...[
-                                                  const SizedBox(height: 16),
-                                                  _buildTextField(
-                                                    controller: vehicleModelController,
-                                                    label: 'Vehicle Model',
-                                                    placeholder: 'e.g., Perodua Myvi',
-                                                  ),
-                                                  const SizedBox(height: 16),
-                                                  _buildTextField(
-                                                    controller: plateNumberController,
-                                                    label: 'License Plate',
-                                                    placeholder: 'e.g., ABC 1234',
-                                                    uppercase: true,
-                                                  ),
-                                                  const SizedBox(height: 16),
-                                                  _buildDropdown(
-                                                    label: 'Max Seats',
-                                                    value: maxSeats.toString(),
-                                                    items: const ['1', '2', '3', '4', '5', '6', '7'],
-                                                    onChanged: (val) => setState(() => maxSeats = int.parse(val!)),
-                                                  ),
-                                                ],
-                                                
-                                                const SizedBox(height: 24),
-
-                                                // Success Message
-                                                AnimatedSize(
-                                                  duration: const Duration(milliseconds: 300),
-                                                  curve: Curves.easeInOut,
-                                                  child: AnimatedOpacity(
-                                                    duration: const Duration(milliseconds: 300),
-                                                    opacity: showSuccess ? 1.0 : 0.0,
-                                                    child: showSuccess
-                                                        ? Container(
-                                                            margin: const EdgeInsets.only(bottom: 16),
-                                                            padding: const EdgeInsets.all(12),
-                                                            width: double.infinity,
-                                                            decoration: BoxDecoration(
-                                                              color: const Color(0xFF4CAF50),
-                                                              borderRadius: BorderRadius.circular(8),
-                                                            ),
-                                                            child: const Row(
-                                                              mainAxisAlignment: MainAxisAlignment.center,
-                                                              children: [
-                                                                Icon(Icons.check_circle, color: Colors.white, size: 20),
-                                                                SizedBox(width: 8),
-                                                                Text(
-                                                                  'Profile Saved Successfully!',
-                                                                  style: TextStyle(
-                                                                    color: Colors.white,
-                                                                    fontWeight: FontWeight.bold,
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          )
-                                                        : const SizedBox.shrink(),
-                                                  ),
-                                                ),
-                                                
-                                                // Save Button
-                                                SizedBox(
-                                                  width: double.infinity,
-                                                  height: 48,
-                                                  child: ElevatedButton.icon(
-                                                    onPressed: handleSave,
-                                                    icon: const Icon(Icons.save),
-                                                    label: const Text('Save Profile'),
-                                                    style: ElevatedButton.styleFrom(
-                                                      backgroundColor: const Color(0xFF2B67F6),
-                                                      foregroundColor: Colors.white,
-                                                      elevation: 0,
-                                                      shape: RoundedRectangleBorder(
-                                                        borderRadius: BorderRadius.circular(12),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFF2B67F6),
+                                              shape: BoxShape.circle,
                                             ),
+                                            child: const Icon(Icons.person, color: Colors.white, size: 20),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          const Text(
+                                            'My Profile',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                              color: Color(0xFF111827),
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          Icon(
+                                            isProfileExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                            color: const Color(0xFF6B7280),
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  
+                                  // Form
+                                  SizeTransition(
+                                    sizeFactor: _profileExpandAnimation,
+                                    axisAlignment: -1.0,
+                                    child: Column(
+                                      children: [
+                                        const Divider(height: 1),
+                                        Padding(
+                                          padding: const EdgeInsets.all(24),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              _buildSectionHeader('Personal Information', Icons.person),
+                                              const SizedBox(height: 16),
+                                              _buildTextField(
+                                                controller: nameController,
+                                                label: 'Full Name',
+                                                placeholder: 'e.g., Ahmad Bin Ali',
+                                              ),
+                                              const SizedBox(height: 16),
+                                              _buildDropdown(
+                                                label: 'Role',
+                                                value: selectedRole,
+                                                items: const ['Student', 'Lecturer', 'Staff', 'Other'],
+                                                onChanged: (val) => setState(() => selectedRole = val!),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              _buildTextField(
+                                                controller: facultyController,
+                                                label: 'Faculty',
+                                                placeholder: 'e.g., Faculty of Computing',
+                                              ),
+                                              const SizedBox(height: 16),
+                                              if (selectedRole == 'Student') ...[
+                                                _buildTextField(
+                                                  controller: programController,
+                                                  label: 'Program',
+                                                  placeholder: 'e.g., Computer Science',
+                                                ),
+                                                const SizedBox(height: 16),
+                                              ],
+                                              _buildTextField(
+                                                controller: phoneNumberController,
+                                                label: 'Phone Number',
+                                                placeholder: '+60123456789',
+                                                inputType: TextInputType.phone,
+                                              ),
+                                              const SizedBox(height: 16),
+                                              _buildDropdown(
+                                                label: 'Preferred Contact Method',
+                                                value: selectedContactMethod,
+                                                items: const ['WhatsApp', 'Telegram', 'Phone', 'SMS/Message'],
+                                                onChanged: (val) => setState(() => selectedContactMethod = val!),
+                                              ),
+                                              const SizedBox(height: 24),
+
+                                              _buildSectionHeader('Vehicle Information', Icons.directions_car),
+                                              const SizedBox(height: 8),
+                                              CheckboxListTile(
+                                                value: isVehicleOwner,
+                                                onChanged: (val) => setState(() => isVehicleOwner = val ?? false),
+                                                title: const Text('I own a vehicle and can offer rides'),
+                                                contentPadding: EdgeInsets.zero,
+                                                activeColor: const Color(0xFF2B67F6),
+                                                controlAffinity: ListTileControlAffinity.leading,
+                                              ),
+                                              if (isVehicleOwner) ...[
+                                                const SizedBox(height: 16),
+                                                _buildTextField(
+                                                  controller: vehicleModelController,
+                                                  label: 'Vehicle Model',
+                                                  placeholder: 'e.g., Perodua Myvi',
+                                                ),
+                                                const SizedBox(height: 16),
+                                                _buildTextField(
+                                                  controller: plateNumberController,
+                                                  label: 'License Plate',
+                                                  placeholder: 'e.g., ABC 1234',
+                                                  uppercase: true,
+                                                ),
+                                                const SizedBox(height: 16),
+                                                _buildDropdown(
+                                                  label: 'Max Seats',
+                                                  value: maxSeats.toString(),
+                                                  items: const ['1', '2', '3', '4', '5', '6', '7'],
+                                                  onChanged: (val) => setState(() => maxSeats = int.parse(val!)),
+                                                ),
+                                              ],
+                                              
+                                              const SizedBox(height: 24),
+
+                                              // Success Message
+                                              AnimatedSize(
+                                                duration: const Duration(milliseconds: 300),
+                                                curve: Curves.easeInOut,
+                                                child: AnimatedOpacity(
+                                                  duration: const Duration(milliseconds: 300),
+                                                  opacity: showSuccess ? 1.0 : 0.0,
+                                                  child: showSuccess
+                                                      ? Container(
+                                                          margin: const EdgeInsets.only(bottom: 16),
+                                                          padding: const EdgeInsets.all(12),
+                                                          width: double.infinity,
+                                                          decoration: BoxDecoration(
+                                                            color: const Color(0xFF4CAF50),
+                                                            borderRadius: BorderRadius.circular(8),
+                                                          ),
+                                                          child: const Row(
+                                                            mainAxisAlignment: MainAxisAlignment.center,
+                                                            children: [
+                                                              Icon(Icons.check_circle, color: Colors.white, size: 20),
+                                                              SizedBox(width: 8),
+                                                              Text(
+                                                                'Profile Saved Successfully!',
+                                                                style: TextStyle(
+                                                                  color: Colors.white,
+                                                                  fontWeight: FontWeight.bold,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        )
+                                                      : const SizedBox.shrink(),
+                                                ),
+                                              ),
+                                              
+                                              // Save Button
+                                              SizedBox(
+                                                width: double.infinity,
+                                                height: 48,
+                                                child: ElevatedButton.icon(
+                                                  onPressed: handleSave,
+                                                  icon: const Icon(Icons.save),
+                                                  label: const Text('Save Profile'),
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor: const Color(0xFF2B67F6),
+                                                    foregroundColor: Colors.white,
+                                                    elevation: 0,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(12),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 48),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 48),
+                          ],
                         ),
                       ),
                     ),
