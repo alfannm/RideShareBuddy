@@ -24,6 +24,67 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool isProfileExpanded = false;
   bool showSuccess = false;
 
+  // --- UMT Data ---
+  final Map<String, List<String>> umtFaculties = {
+    'Faculty of Computer Science and Mathematics': [
+      'Software Engineering',
+      'Mobile Computing', 
+      'Maritime Informatics',
+      'Data Analytics',
+      'Financial Mathematics',
+      'Applied Mathematics'
+    ],
+    'Faculty of Fisheries and Food Science': [
+      'Fisheries',
+      'Aquaculture',
+      'Food Technology',
+      'Food Service and Nutrition',
+      'Crop Science'
+    ],
+    'Faculty of Ocean Engineering Technology': [
+      'Maritime Technology',
+      'Naval Architecture',
+      'Environmental Technology',
+      'Electronics and Instrumentation'
+    ],
+    'Faculty of Maritime Studies': [
+      'Maritime Management',
+      'Maritime Operations',
+      'Nautical Science',
+      'Logistics'
+    ],
+    'Faculty of Business, Economics and Social Development': [
+      'Accounting',
+      'Marketing',
+      'Tourism Management',
+      'Economics',
+      'Policy Studies',
+      'Counseling'
+    ],
+    'Faculty of Science and Marine Environment': [
+      'Marine Biology',
+      'Marine Science',
+      'Chemical Sciences',
+      'Biological Sciences',
+      'Nanophysics'
+    ]
+  };
+
+  final List<String> umtDepartments = [
+    'Registrar Office',
+    'Bursary',
+    'Student Affairs (HEPA)',
+    'Library (PSNZ)',
+    'Islamic Centre',
+    'Development & Maintenance',
+    'Security',
+    'International Centre',
+    'Corporate Comm.',
+    'Information Technology Centre (PPDI)'
+  ];
+
+  final List<String> vehicleTypes = ['Car', 'Motorcycle', 'Bicycle', 'Other'];
+
   // --- Animation Controllers ---
   late AnimationController _animationController; 
   late AnimationController _bgController; 
@@ -34,22 +95,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   
   // --- Form Controllers ---
   late TextEditingController nameController;
-  late TextEditingController facultyController;
-  late TextEditingController programController;
+  late TextEditingController matricController;
   late TextEditingController phoneNumberController;
   late TextEditingController vehicleModelController;
   late TextEditingController plateNumberController;
+  late TextEditingController otherRoleController;
+  late TextEditingController otherVehicleTypeController;
 
+  // --- Form State ---
   String selectedRole = 'Student';
+  String? selectedGender;
+  String? selectedFaculty;
+  String? selectedProgram;
+  String? selectedDepartment;
   String selectedContactMethod = 'WhatsApp';
   bool isVehicleOwner = false;
+  String selectedVehicleType = 'Car';
   int maxSeats = 4;
 
   @override
   void initState() {
     super.initState();
 
-    // 1. Initialize Profile Animations
+    // 1. Initialize Animations
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
@@ -67,24 +135,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
-    // 2. Initialize Background Animation
     _bgController = AnimationController(
       duration: const Duration(seconds: 12), 
       vsync: this,
     )..repeat(); 
 
-    // 3. Initialize Form Data
+    // 2. Initialize Form Data
     nameController = TextEditingController(text: widget.profile.name);
-    facultyController = TextEditingController(text: widget.profile.faculty);
-    programController = TextEditingController(text: widget.profile.program ?? '');
+    matricController = TextEditingController(text: widget.profile.matricNumber ?? '');
     phoneNumberController = TextEditingController(text: widget.profile.phoneNumber);
+    otherRoleController = TextEditingController(text: widget.profile.otherRoleDescription ?? '');
+    
+    // Vehicle Data
     vehicleModelController = TextEditingController(text: widget.profile.vehicleDetails?.model ?? '');
     plateNumberController = TextEditingController(text: widget.profile.vehicleDetails?.plateNumber ?? '');
+    otherVehicleTypeController = TextEditingController(text: widget.profile.vehicleDetails?.otherTypeDescription ?? '');
 
+    // Set State Variables
     selectedRole = widget.profile.role;
+    selectedGender = widget.profile.gender;
+    selectedFaculty = widget.profile.faculty;
+    // Validate if program exists in current faculty list, else reset
+    if (selectedFaculty != null && umtFaculties.containsKey(selectedFaculty)) {
+       if (umtFaculties[selectedFaculty]!.contains(widget.profile.program)) {
+         selectedProgram = widget.profile.program;
+       }
+    }
+    
+    selectedDepartment = widget.profile.department;
     selectedContactMethod = widget.profile.contactMethod;
     isVehicleOwner = widget.profile.isVehicleOwner;
-    maxSeats = widget.profile.vehicleDetails?.maxSeats ?? 4;
+    
+    if (widget.profile.vehicleDetails != null) {
+      selectedVehicleType = widget.profile.vehicleDetails!.type;
+      maxSeats = widget.profile.vehicleDetails!.maxSeats;
+    }
   }
 
   @override
@@ -92,11 +177,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _animationController.dispose();
     _bgController.dispose(); 
     nameController.dispose();
-    facultyController.dispose();
-    programController.dispose();
+    matricController.dispose();
     phoneNumberController.dispose();
     vehicleModelController.dispose();
     plateNumberController.dispose();
+    otherRoleController.dispose();
+    otherVehicleTypeController.dispose();
     super.dispose();
   }
 
@@ -112,17 +198,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   bool isFormValid() {
-    if (nameController.text.trim().isEmpty ||
-        facultyController.text.trim().isEmpty ||
-        phoneNumberController.text.trim().isEmpty) {
+    if (nameController.text.trim().isEmpty || phoneNumberController.text.trim().isEmpty) {
       return false;
     }
-    if (selectedRole == 'Student' && programController.text.trim().isEmpty) {
-      return false;
+
+    if (selectedRole == 'Student') {
+      if (matricController.text.trim().isEmpty || 
+          selectedGender == null || 
+          selectedFaculty == null || 
+          selectedProgram == null) {
+        return false;
+      }
+    } else if (selectedRole == 'Lecturer') {
+      if (selectedFaculty == null) return false;
+    } else if (selectedRole == 'Staff') {
+      if (selectedDepartment == null) return false;
+    } else if (selectedRole == 'Other') {
+      if (otherRoleController.text.trim().isEmpty) return false;
     }
+
     if (isVehicleOwner) {
-      if (vehicleModelController.text.trim().isEmpty ||
-          plateNumberController.text.trim().isEmpty) {
+      if (vehicleModelController.text.trim().isEmpty || plateNumberController.text.trim().isEmpty) {
+        return false;
+      }
+      if (selectedVehicleType == 'Other' && otherVehicleTypeController.text.trim().isEmpty) {
         return false;
       }
     }
@@ -145,6 +244,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             model: vehicleModelController.text,
             plateNumber: plateNumberController.text.toUpperCase(),
             maxSeats: maxSeats,
+            type: selectedVehicleType,
+            otherTypeDescription: selectedVehicleType == 'Other' ? otherVehicleTypeController.text : null,
           )
         : null;
 
@@ -152,12 +253,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       id: widget.profile.id,
       name: nameController.text,
       role: selectedRole,
-      faculty: facultyController.text,
-      program: programController.text.isEmpty ? null : programController.text,
       contactMethod: selectedContactMethod,
       phoneNumber: phoneNumberController.text,
       isVehicleOwner: isVehicleOwner,
       vehicleDetails: vehicleDetails,
+      // Conditional Fields
+      matricNumber: selectedRole == 'Student' ? matricController.text.toUpperCase() : null,
+      gender: selectedRole == 'Student' ? selectedGender : null,
+      faculty: (selectedRole == 'Student' || selectedRole == 'Lecturer') ? selectedFaculty : null,
+      program: selectedRole == 'Student' ? selectedProgram : null,
+      department: selectedRole == 'Staff' ? selectedDepartment : null,
+      otherRoleDescription: selectedRole == 'Other' ? otherRoleController.text : null,
     );
 
     widget.onSaveProfile(updatedProfile);
@@ -207,15 +313,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     constraints: BoxConstraints(
                       minHeight: constraints.maxHeight,
                     ),
-                    // We remove IntrinsicHeight to fix the overflow error.
-                    // Instead, we use mainAxisAlignment to control positioning.
                     child: Center(
                       child: Container(
                         constraints: const BoxConstraints(maxWidth: 400),
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: Column(
-                          // When expanded: Start from top to allow scrolling.
-                          // When collapsed: Center vertically for dashboard look.
                           mainAxisAlignment: isProfileExpanded ? MainAxisAlignment.start : MainAxisAlignment.center,
                           children: [
                             const SizedBox(height: 24),
@@ -229,21 +331,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   width: 320, 
                                   height: 320,
                                   fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      width: 320,
-                                      height: 320,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF2B67F6),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: const Icon(
-                                        Icons.directions_car,
-                                        size: 120,
-                                        color: Colors.white,
-                                      ),
-                                    );
-                                  },
+                                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.directions_car, size: 100),
                                 ),
                               ),
                             ),
@@ -266,15 +354,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                           backgroundColor: const Color(0xFF2B67F6),
                                           foregroundColor: Colors.white,
                                           elevation: 2,
-                                          shadowColor: const Color(0xFF2B67F6).withOpacity(0.4),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                         ),
-                                        child: const Text(
-                                          'Find a Ride',
-                                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                        ),
+                                        child: const Text('Find a Ride', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                                       ),
                                     ),
                                     const SizedBox(height: 16),
@@ -287,15 +369,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                           backgroundColor: const Color(0xFF4CAF50),
                                           foregroundColor: Colors.white,
                                           elevation: 2,
-                                          shadowColor: const Color(0xFF4CAF50).withOpacity(0.4),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                         ),
-                                        child: const Text(
-                                          'Offer a Ride',
-                                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                        ),
+                                        child: const Text('Offer a Ride', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                                       ),
                                     ),
                                     const SizedBox(height: 32),
@@ -382,20 +458,74 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                 onChanged: (val) => setState(() => selectedRole = val!),
                                               ),
                                               const SizedBox(height: 16),
-                                              _buildTextField(
-                                                controller: facultyController,
-                                                label: 'Faculty',
-                                                placeholder: 'e.g., Faculty of Computing',
-                                              ),
-                                              const SizedBox(height: 16),
+
+                                              // --- Dynamic Fields based on Role ---
                                               if (selectedRole == 'Student') ...[
                                                 _buildTextField(
-                                                  controller: programController,
-                                                  label: 'Program',
-                                                  placeholder: 'e.g., Computer Science',
+                                                  controller: matricController,
+                                                  label: 'Matric Number',
+                                                  placeholder: 'e.g., S12345',
+                                                  uppercase: true,
+                                                ),
+                                                const SizedBox(height: 16),
+                                                _buildDropdown(
+                                                  label: 'Gender',
+                                                  value: selectedGender,
+                                                  items: const ['Male', 'Female'],
+                                                  onChanged: (val) => setState(() => selectedGender = val!),
+                                                  hint: 'Select Gender',
+                                                ),
+                                                const SizedBox(height: 16),
+                                                _buildDropdown(
+                                                  label: 'Faculty',
+                                                  value: selectedFaculty,
+                                                  items: umtFaculties.keys.toList(),
+                                                  onChanged: (val) {
+                                                    setState(() {
+                                                      selectedFaculty = val;
+                                                      selectedProgram = null; // Reset program when faculty changes
+                                                    });
+                                                  },
+                                                  hint: 'Select Faculty',
+                                                ),
+                                                if (selectedFaculty != null) ...[
+                                                  const SizedBox(height: 16),
+                                                  _buildDropdown(
+                                                    label: 'Program/Course',
+                                                    value: selectedProgram,
+                                                    items: umtFaculties[selectedFaculty]!,
+                                                    onChanged: (val) => setState(() => selectedProgram = val!),
+                                                    hint: 'Select Program',
+                                                  ),
+                                                ],
+                                                const SizedBox(height: 16),
+                                              ] else if (selectedRole == 'Lecturer') ...[
+                                                 _buildDropdown(
+                                                  label: 'Faculty',
+                                                  value: selectedFaculty,
+                                                  items: umtFaculties.keys.toList(),
+                                                  onChanged: (val) => setState(() => selectedFaculty = val!),
+                                                  hint: 'Select Faculty',
+                                                ),
+                                                const SizedBox(height: 16),
+                                              ] else if (selectedRole == 'Staff') ...[
+                                                 _buildDropdown(
+                                                  label: 'Department',
+                                                  value: selectedDepartment,
+                                                  items: umtDepartments,
+                                                  onChanged: (val) => setState(() => selectedDepartment = val!),
+                                                  hint: 'Select Department',
+                                                ),
+                                                const SizedBox(height: 16),
+                                              ] else if (selectedRole == 'Other') ...[
+                                                _buildTextField(
+                                                  controller: otherRoleController,
+                                                  label: 'Description',
+                                                  placeholder: 'e.g. Visitor, Contractor',
                                                 ),
                                                 const SizedBox(height: 16),
                                               ],
+
                                               _buildTextField(
                                                 controller: phoneNumberController,
                                                 label: 'Phone Number',
@@ -422,6 +552,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                 controlAffinity: ListTileControlAffinity.leading,
                                               ),
                                               if (isVehicleOwner) ...[
+                                                const SizedBox(height: 16),
+                                                _buildDropdown(
+                                                  label: 'Vehicle Type',
+                                                  value: selectedVehicleType,
+                                                  items: vehicleTypes,
+                                                  onChanged: (val) => setState(() => selectedVehicleType = val!),
+                                                ),
+                                                if (selectedVehicleType == 'Other') ...[
+                                                  const SizedBox(height: 16),
+                                                   _buildTextField(
+                                                    controller: otherVehicleTypeController,
+                                                    label: 'Specify Vehicle Type',
+                                                    placeholder: 'e.g. Van, E-Scooter',
+                                                  ),
+                                                ],
                                                 const SizedBox(height: 16),
                                                 _buildTextField(
                                                   controller: vehicleModelController,
@@ -571,9 +716,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildDropdown({
     required String label,
-    required String value,
+    required String? value, // Made nullable for better handling
     required List<String> items,
     required Function(String?) onChanged,
+    String? hint,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -588,7 +734,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           decoration: BoxDecoration(border: Border.all(color: const Color(0xFFD1D5DB)), borderRadius: BorderRadius.circular(8)),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: value,
+              value: items.contains(value) ? value : null, // Safely handle if value isn't in list
+              hint: hint != null ? Text(hint, style: const TextStyle(color: Color(0xFF9CA3AF))) : null,
               isExpanded: true,
               items: items.map((String item) {
                 return DropdownMenuItem<String>(value: item, child: Text(item));

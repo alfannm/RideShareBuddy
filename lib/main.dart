@@ -55,13 +55,15 @@ class _RideShareAppState extends State<RideShareApp> {
   @override
   void initState() {
     super.initState();
-    // Initialize with sample user profile
+    // Initialize with sample user profile (Updated for UMT Specifics)
     userProfile = UserProfile(
       id: 'u1',
       name: 'Alfan Na Im bin Shabaruddin',
       role: 'Student',
+      matricNumber: 'S72505', 
+      gender: 'Male',
       faculty: 'Faculty of Computer Science and Mathematics',
-      program: 'BCS. Mobile Computing',
+      program: 'Mobile Computing',
       contactMethod: 'WhatsApp',
       phoneNumber: '+601124181384',
       isVehicleOwner: true,
@@ -69,6 +71,7 @@ class _RideShareAppState extends State<RideShareApp> {
         model: 'Yamaha 135LC Fi',
         plateNumber: 'VJH 5198',
         maxSeats: 1,
+        type: 'Motorcycle'
       ),
     );
 
@@ -262,7 +265,6 @@ class _RideShareAppState extends State<RideShareApp> {
         );
 
       default:
-        // FIX: Added the missing profile arguments here
         return HomeScreen(
           onFindRide: () => navigateTo('listings-offers'),
           onOfferRide: () => navigateTo('listings-requests'),
