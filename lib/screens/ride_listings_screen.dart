@@ -27,7 +27,7 @@ class RideListingsScreen extends StatefulWidget {
 }
 
 class _RideListingsScreenState extends State<RideListingsScreen> {
-  bool showFilter = false;
+  bool showFilterBar = false;
   String pickupFilter = '';
   String destinationFilter = '';
   String timeFilter = '';
@@ -76,175 +76,30 @@ class _RideListingsScreenState extends State<RideListingsScreen> {
     final displayItems = getDisplayItems();
 
     return Scaffold(
-      // Updated background color to match Home theme
       backgroundColor: const Color(0xFFEBF4FF),
-      
-      // Right-side Filter Drawer
-      endDrawer: Drawer(
-        width: 320,
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Drawer Header
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: const BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: Color(0xFFE5E7EB)),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Filters',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close),
-                      iconSize: 20,
-                    ),
-                  ],
-                ),
-              ),
-              
-              // Drawer Content
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      // Pickup Location Dropdown
-                      DropdownButtonFormField<String>(
-                        value: pickupFilter.isEmpty ? null : pickupFilter,
-                        decoration: const InputDecoration(
-                          labelText: 'Pickup Location',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: locationOptions.map((location) {
-                          return DropdownMenuItem(
-                            value: location,
-                            child: Text(location),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            pickupFilter = value ?? '';
-                          });
-                        },
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // Destination Dropdown
-                      DropdownButtonFormField<String>(
-                        value: destinationFilter.isEmpty ? null : destinationFilter,
-                        decoration: const InputDecoration(
-                          labelText: 'Destination',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: locationOptions.map((location) {
-                          return DropdownMenuItem(
-                            value: location,
-                            child: Text(location),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            destinationFilter = value ?? '';
-                          });
-                        },
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // Time Picker
-                      TextField(
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          labelText: 'Time',
-                          border: const OutlineInputBorder(),
-                          suffixIcon: const Icon(Icons.access_time),
-                          hintText: timeFilter.isEmpty ? 'Select time' : timeFilter,
-                        ),
-                        onTap: () async {
-                          final time = await showTimePicker(
-                            context: context,
-                            initialTime: TimeOfDay.now(),
-                          );
-                          if (time != null) {
-                            setState(() {
-                              final hour = time.hourOfPeriod;
-                              final minute = time.minute.toString().padLeft(2, '0');
-                              final period = time.period == DayPeriod.am ? 'AM' : 'PM';
-                              timeFilter = '$hour:$minute $period';
-                            });
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              
-              // Drawer Footer
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: const BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: Color(0xFFE5E7EB)),
-                  ),
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      clearFilters();
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6B7280),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                    ),
-                    child: const Text('Clear Filters'),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      // Backdrop with 50% opacity when drawer is open
-      drawerScrimColor: Colors.black.withOpacity(0.5),
-      
       body: Stack(
         children: [
           // 1. Static Wave Background
           Positioned.fill(
             child: CustomPaint(
               painter: FluidBackgroundPainter(
-                animationValue: 0.5, // Static value for non-moving waves
+                animationValue: 0.5,
               ),
             ),
           ),
 
           // 2. Main Content
           SafeArea(
-            // FIX: Wrapped in Center to fix "weird not center UI" issue
             child: Center(
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 480),
-                margin: const EdgeInsets.symmetric(horizontal: 24),
+                // Removed margin here to allow filter bar to touch edges if needed, 
+                // but applied padding to content below
                 child: Column(
                   children: [
-                    // Header
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    // Header (Always Visible)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                       child: Row(
                         children: [
                           IconButton(
@@ -264,79 +119,196 @@ class _RideListingsScreenState extends State<RideListingsScreen> {
                           ),
                           IconButton(
                             onPressed: () {
-                              Scaffold.of(context).openEndDrawer();
+                              setState(() {
+                                showFilterBar = !showFilterBar;
+                              });
                             },
-                            icon: const Icon(Icons.tune),
+                            icon: Icon(showFilterBar ? Icons.close : Icons.tune),
                             color: const Color(0xFF1F2937),
                           ),
                         ],
                       ),
                     ),
 
-                    // List View
-                    Expanded(
-                      child: displayItems.isEmpty
-                          ? Container(
-                              padding: const EdgeInsets.all(32),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.9), // Slightly transparent
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  'No rides found. Try adjusting your filters.',
+                    // Filter Bar (Animated Expansion)
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      child: Container(
+                        height: showFilterBar ? null : 0,
+                        width: double.infinity,
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        // Styling to distinguish from background
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: const BorderRadius.vertical(
+                            bottom: Radius.circular(24), // More rounded bottom
+                            top: Radius.circular(24), // Rounded top to look like a floating card
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.1),
+                              blurRadius: 15,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        // Clip content so it respects rounded corners during animation
+                        clipBehavior: Clip.antiAlias, 
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Filters",
                                   style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
                                     color: Color(0xFF6B7280),
                                   ),
-                                  textAlign: TextAlign.center,
                                 ),
-                              ),
-                            )
-                          : ListView.builder(
-                              itemCount: displayItems.length,
-                              itemBuilder: (context, index) {
-                                final item = displayItems[index];
-                                if (widget.type == 'offers') {
-                                  final offer = item as RideOffer;
-                                  return RideCard(
-                                    pickup: offer.pickup,
-                                    destination: offer.destination,
-                                    time: offer.time,
-                                    seats: offer.seats,
-                                    type: 'offer',
-                                    onTap: () {
-                                      setState(() {
-                                        selectedRide = offer;
-                                      });
-                                      _showRideDetailsModal(context, offer, 'offer');
-                                    },
-                                  );
-                                } else {
-                                  final request = item as RideRequest;
-                                  return RideCard(
-                                    pickup: request.pickup,
-                                    destination: request.destination,
-                                    time: request.time,
-                                    riders: request.riders,
-                                    type: 'request',
-                                    onTap: () {
-                                      setState(() {
-                                        selectedRide = request;
-                                      });
-                                      _showRideDetailsModal(context, request, 'request');
-                                    },
-                                  );
-                                }
-                              },
+                                const SizedBox(height: 16),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildFilterDropdown(
+                                        label: 'Pickup',
+                                        value: pickupFilter,
+                                        items: locationOptions,
+                                        onChanged: (value) => setState(() => pickupFilter = value ?? ''),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: _buildFilterDropdown(
+                                        label: 'Destination',
+                                        value: destinationFilter,
+                                        items: locationOptions,
+                                        onChanged: (value) => setState(() => destinationFilter = value ?? ''),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: _buildTimePickerFilter(),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      flex: 1,
+                                      child: SizedBox(
+                                        height: 50, // Match dropdown height
+                                        child: OutlinedButton(
+                                          onPressed: clearFilters,
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: Colors.red,
+                                            side: BorderSide(color: Colors.red.withOpacity(0.5)),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          child: const Text('Clear'),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
+                          ),
+                        ),
+                      ),
                     ),
 
-                    // Create New Button
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    // Main List Content
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 16), // Spacing between header/filter and list
+                            Expanded(
+                              child: displayItems.isEmpty
+                                  ? Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(32),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.8),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.search_off, size: 48, color: Colors.grey[400]),
+                                          const SizedBox(height: 16),
+                                          const Text(
+                                            'No rides found matching your filters.',
+                                            style: TextStyle(
+                                              color: Color(0xFF6B7280),
+                                              fontSize: 16,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          TextButton(
+                                            onPressed: clearFilters,
+                                            child: const Text('Clear Filters'),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : ListView.builder(
+                                      itemCount: displayItems.length,
+                                      padding: const EdgeInsets.only(bottom: 80), // Space for FAB/Button
+                                      itemBuilder: (context, index) {
+                                        final item = displayItems[index];
+                                        if (widget.type == 'offers') {
+                                          final offer = item as RideOffer;
+                                          return RideCard(
+                                            pickup: offer.pickup,
+                                            destination: offer.destination,
+                                            time: offer.time,
+                                            seats: offer.seats,
+                                            type: 'offer',
+                                            onTap: () {
+                                              setState(() => selectedRide = offer);
+                                              _showRideDetailsModal(context, offer, 'offer');
+                                            },
+                                          );
+                                        } else {
+                                          final request = item as RideRequest;
+                                          return RideCard(
+                                            pickup: request.pickup,
+                                            destination: request.destination,
+                                            time: request.time,
+                                            riders: request.riders,
+                                            type: 'request',
+                                            onTap: () {
+                                              setState(() => selectedRide = request);
+                                              _showRideDetailsModal(context, request, 'request');
+                                            },
+                                          );
+                                        }
+                                      },
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Create New Button (Fixed at Bottom)
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                       child: SizedBox(
                         width: double.infinity,
-                        height: 48,
+                        height: 50,
                         child: ElevatedButton(
                           onPressed: widget.onCreateNew,
                           style: ElevatedButton.styleFrom(
@@ -344,9 +316,12 @@ class _RideListingsScreenState extends State<RideListingsScreen> {
                                 ? const Color(0xFF2B67F6)
                                 : const Color(0xFF4CAF50),
                             foregroundColor: Colors.white,
-                            elevation: 0,
+                            elevation: 4,
+                            shadowColor: (widget.type == 'offers' 
+                                ? const Color(0xFF2B67F6) 
+                                : const Color(0xFF4CAF50)).withOpacity(0.4),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                           ),
                           child: Text(
@@ -355,7 +330,8 @@ class _RideListingsScreenState extends State<RideListingsScreen> {
                                 : 'Create Ride Offer',
                             style: const TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ),
@@ -368,6 +344,94 @@ class _RideListingsScreenState extends State<RideListingsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // Helper widgets for filter bar components
+
+  Widget _buildFilterDropdown({
+    required String label,
+    required String value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value.isEmpty ? null : value,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.grey[600], fontSize: 13),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF2B67F6)),
+        ),
+        filled: true,
+        fillColor: const Color(0xFFF9FAFB),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      ),
+      icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+      items: items.map((location) {
+        return DropdownMenuItem(
+          value: location,
+          child: Text(
+            location,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 14),
+          ),
+        );
+      }).toList(),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildTimePickerFilter() {
+    return TextField(
+      readOnly: true,
+      decoration: InputDecoration(
+        labelText: 'Time',
+        labelStyle: TextStyle(color: Colors.grey[600], fontSize: 13),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF2B67F6)),
+        ),
+        filled: true,
+        fillColor: const Color(0xFFF9FAFB),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        suffixIcon: const Icon(Icons.access_time, size: 20, color: Color(0xFF6B7280)),
+        hintText: timeFilter.isEmpty ? 'Select' : timeFilter,
+        hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+      ),
+      style: const TextStyle(fontSize: 14),
+      onTap: () async {
+        final time = await showTimePicker(
+          context: context,
+          initialTime: TimeOfDay.now(),
+        );
+        if (time != null) {
+          setState(() {
+            final hour = time.hourOfPeriod;
+            final minute = time.minute.toString().padLeft(2, '0');
+            final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+            timeFilter = '$hour:$minute $period';
+          });
+        }
+      },
     );
   }
 
@@ -508,7 +572,6 @@ class _RideListingsScreenState extends State<RideListingsScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Contact via WhatsApp
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
@@ -570,7 +633,7 @@ class _RideListingsScreenState extends State<RideListingsScreen> {
   }
 }
 
-// --- Shared Fluid Wave Background Painter (Identical to Home) ---
+// --- Shared Fluid Wave Background Painter ---
 class FluidBackgroundPainter extends CustomPainter {
   final double animationValue;
 
