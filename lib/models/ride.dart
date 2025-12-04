@@ -49,7 +49,8 @@ class RideRequest {
            (DateTime.now().microsecondsSinceEpoch % 1000000).toString();
 }
 
-// Business Logic: Filtering lists based on user input
+// --- Business Logic Functions ---
+
 List<RideOffer> filterRideOffers(
   List<RideOffer> offers,
   String pickupFilter,
@@ -96,20 +97,41 @@ List<T> sortRidesByTime<T>(List<T> rides, String Function(T) getTime) {
   return sortedList;
 }
 
+// FIX: Robust time parsing that handles both "HH:mm" (24h) and "HH:mm PM" (12h)
 int parseTime(String timeStr) {
-  final parts = timeStr.split(' ');
-  final timeParts = parts[0].split(':');
-  final period = parts[1];
-  
-  int hours = int.parse(timeParts[0]);
-  int minutes = int.parse(timeParts[1]);
-  
-  // Convert to 24-hour format
-  if (period == 'PM' && hours != 12) {
-    hours += 12;
-  } else if (period == 'AM' && hours == 12) {
-    hours = 0;
+  try {
+    timeStr = timeStr.trim();
+    
+    // Check if 12-hour format (contains AM or PM)
+    bool is12Hour = timeStr.toUpperCase().contains('AM') || timeStr.toUpperCase().contains('PM');
+
+    if (is12Hour) {
+      final parts = timeStr.split(' ');
+      if (parts.length < 2) return 0; // Fallback
+      
+      final timeParts = parts[0].split(':');
+      final period = parts[1];
+
+      int hours = int.parse(timeParts[0]);
+      int minutes = int.parse(timeParts[1]);
+
+      if (period.toUpperCase() == 'PM' && hours != 12) {
+        hours += 12;
+      } else if (period.toUpperCase() == 'AM' && hours == 12) {
+        hours = 0;
+      }
+      return hours * 60 + minutes;
+    } else {
+      // Assume 24-hour format "HH:mm"
+      final timeParts = timeStr.split(':');
+      if (timeParts.length < 2) return 0;
+      
+      int hours = int.parse(timeParts[0]);
+      int minutes = int.parse(timeParts[1]);
+      return hours * 60 + minutes;
+    }
+  } catch (e) {
+    // Return 0 (start of day) if parsing fails completely
+    return 0;
   }
-  
-  return hours * 60 + minutes;
 }

@@ -1,8 +1,9 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/ride.dart';
 import '../models/user.dart';
-import 'home_screen.dart'; // Imports FluidBackgroundPainter
+import 'home_screen.dart';
 
 class CreateRequestScreen extends StatefulWidget {
   final UserProfile? userProfile;
@@ -26,10 +27,9 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
   String pickup = '';
   String destination = '';
   String time = '';
-  int riders = 1; // Default value
+  int riders = 1;
   String notes = '';
 
-  // Updated UMT Locations List
   final List<String> locationOptions = [
     'Faculty of Computer Science and Mathematics',
     'Faculty of Fisheries and Food Science',
@@ -37,23 +37,11 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     'Faculty of Maritime Studies',
     'Faculty of Business, Economics and Social Development',
     'Faculty of Science and Marine Environment',
-    'DSM',
-    'Kolej Kediaman',
-    'Kafe Limbong',
-    'KKSAM',
-    'Pusat Sukan dan Rekreasi',
-    'Kompleks Siswa',
-    'PISM',
-    'PSNZ',
-    'INOS',
-    'AKUATROP',
-    'PPAL',
-    'UMTCC',
-    'Makmal Berpusat',
-    'Kompleks Kuliah Berpusat',
+    'DSM', 'Kolej Kediaman', 'Kafe Limbong', 'KKSAM', 'Pusat Sukan dan Rekreasi',
+    'Kompleks Siswa', 'PISM', 'PSNZ', 'INOS', 'AKUATROP', 'PPAL',
+    'UMTCC', 'Makmal Berpusat', 'Kompleks Kuliah Berpusat',
   ];
 
-  // Generate list '1' to '9'
   final List<String> riderOptions = List.generate(9, (index) => (index + 1).toString());
 
   String? validateRequired(String? value, String fieldName) {
@@ -71,7 +59,6 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
       }
       _formKey.currentState!.save();
 
-      // Construct rich requester info string
       String requesterDetails = widget.userProfile != null 
           ? '${widget.userProfile!.role} • ${widget.userProfile!.faculty ?? widget.userProfile!.department ?? "UMT"}'
           : 'Anonymous';
@@ -99,18 +86,14 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
       backgroundColor: const Color(0xFFEBF4FF),
       body: Stack(
         children: [
-          // 1. Static Wave Background
           Positioned.fill(
             child: CustomPaint(
               painter: FluidBackgroundPainter(animationValue: 0.5),
             ),
           ),
-
-          // 2. Main Layout
           SafeArea(
             child: Column(
               children: [
-                // --- STICKY HEADER ---
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   child: Row(
@@ -130,19 +113,19 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      const Text(
-                        'Create Request',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1F2937),
+                      const Expanded(
+                        child: Text(
+                          'Create Request',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1F2937),
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-
-                // --- SCROLLABLE FORM ---
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
@@ -167,7 +150,6 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                           children: [
                             _buildSectionTitle('Trip Details'),
                             const SizedBox(height: 16),
-                            
                             _buildDropdownField(
                               label: 'Pickup Location',
                               value: pickup.isEmpty ? null : pickup,
@@ -177,7 +159,6 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                               icon: Icons.my_location,
                             ),
                             const SizedBox(height: 16),
-                            
                             _buildDropdownField(
                               label: 'Destination',
                               value: destination.isEmpty ? null : destination,
@@ -186,11 +167,9 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                               validator: (v) => validateRequired(v, 'Destination'),
                               icon: Icons.location_on,
                             ),
-                            
                             const SizedBox(height: 24),
                             _buildSectionTitle('Time & Riders'),
                             const SizedBox(height: 16),
-
                             _buildDateTimeField(
                               label: 'Needed By',
                               value: time,
@@ -199,13 +178,16 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                               onTap: () async {
                                 final t = await showTimePicker(context: context, initialTime: TimeOfDay.now());
                                 if (t != null) {
-                                  setState(() => time = t.format(context));
+                                  // FIX: Force 12-hour format
+                                  final String period = t.hour >= 12 ? 'PM' : 'AM';
+                                  int hour12 = t.hour > 12 ? t.hour - 12 : t.hour;
+                                  if (hour12 == 0) hour12 = 12;
+                                  final String minute = t.minute.toString().padLeft(2, '0');
+                                  setState(() => time = '$hour12:$minute $period');
                                 }
                               },
                             ),
                             const SizedBox(height: 16),
-
-                            // Dropdown for Riders
                             _buildDropdownField(
                               label: 'Number of Riders',
                               value: riders.toString(),
@@ -214,11 +196,9 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                               validator: null,
                               icon: Icons.people,
                             ),
-                            
                             const SizedBox(height: 24),
                             _buildSectionTitle('Extra Info'),
                             const SizedBox(height: 16),
-
                             _buildInputField(
                               label: 'Additional Notes',
                               placeholder: 'e.g., Heavy luggage...',
@@ -226,16 +206,14 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                               maxLines: 3,
                               onSaved: (v) => notes = v ?? '',
                             ),
-
                             const SizedBox(height: 32),
-                            
                             SizedBox(
                               width: double.infinity,
                               height: 54,
                               child: ElevatedButton(
                                 onPressed: handleSubmit,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF2B67F6), // Request uses Blue
+                                  backgroundColor: const Color(0xFF2B67F6),
                                   foregroundColor: Colors.white,
                                   elevation: 4,
                                   shadowColor: const Color(0xFF2B67F6).withOpacity(0.4),
@@ -261,28 +239,11 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     );
   }
 
-  // --- Reuse Helper Widgets ---
   Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 18, 
-        fontWeight: FontWeight.bold, 
-        color: Color(0xFF111827)
-      ),
-    );
+    return Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF111827)));
   }
 
-  Widget _buildInputField({
-    required String label,
-    String? placeholder,
-    String? initialValue,
-    required IconData icon,
-    TextInputType inputType = TextInputType.text,
-    String? Function(String?)? validator,
-    Function(String?)? onSaved,
-    int maxLines = 1,
-  }) {
+  Widget _buildInputField({required String label, String? placeholder, String? initialValue, required IconData icon, TextInputType inputType = TextInputType.text, String? Function(String?)? validator, Function(String?)? onSaved, int maxLines = 1}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -292,7 +253,6 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
           initialValue: initialValue,
           keyboardType: inputType,
           maxLines: maxLines,
-          inputFormatters: inputType == TextInputType.number ? [FilteringTextInputFormatter.digitsOnly] : [],
           decoration: _inputDecoration(placeholder, icon),
           validator: validator,
           onSaved: onSaved,
@@ -301,13 +261,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     );
   }
 
-  Widget _buildDateTimeField({
-    required String label,
-    required String value,
-    required String placeholder,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildDateTimeField({required String label, required String value, required String placeholder, required IconData icon, required VoidCallback onTap}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -324,14 +278,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     );
   }
 
-  Widget _buildDropdownField({
-    required String label,
-    required String? value,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-    required String? Function(String?)? validator,
-    required IconData icon,
-  }) {
+  Widget _buildDropdownField({required String label, required String? value, required List<String> items, required ValueChanged<String?> onChanged, required String? Function(String?)? validator, required IconData icon}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -344,7 +291,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
           items: items.map((l) => DropdownMenuItem(value: l, child: Text(l, overflow: TextOverflow.ellipsis))).toList(),
           onChanged: onChanged,
           validator: validator,
-          isExpanded: true, // Handles long text
+          isExpanded: true,
         ),
       ],
     );
@@ -358,22 +305,10 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
       filled: true,
       fillColor: const Color(0xFFF9FAFB),
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade200),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF2B67F6), width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.redAccent),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2B67F6), width: 2)),
+      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.redAccent)),
     );
   }
 }

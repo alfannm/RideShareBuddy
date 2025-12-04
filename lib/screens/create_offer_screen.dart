@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/ride.dart';
 import '../models/user.dart';
-import 'home_screen.dart'; // Imports FluidBackgroundPainter
+import 'home_screen.dart'; 
 
 class CreateOfferScreen extends StatefulWidget {
   final UserProfile? userProfile;
@@ -30,7 +30,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   bool isFree = true;
   String costAmount = '';
 
-  // Updated UMT Locations List
   final List<String> locationOptions = [
     'Faculty of Computer Science and Mathematics',
     'Faculty of Fisheries and Food Science',
@@ -38,20 +37,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     'Faculty of Maritime Studies',
     'Faculty of Business, Economics and Social Development',
     'Faculty of Science and Marine Environment',
-    'DSM',
-    'Kolej Kediaman',
-    'Kafe Limbong',
-    'KKSAM',
-    'Pusat Sukan dan Rekreasi',
-    'Kompleks Siswa',
-    'PISM',
-    'PSNZ',
-    'INOS',
-    'AKUATROP',
-    'PPAL',
-    'UMTCC',
-    'Makmal Berpusat',
-    'Kompleks Kuliah Berpusat',
+    'DSM', 'Kolej Kediaman', 'Kafe Limbong', 'KKSAM', 'Pusat Sukan dan Rekreasi',
+    'Kompleks Siswa', 'PISM', 'PSNZ', 'INOS', 'AKUATROP', 'PPAL',
+    'UMTCC', 'Makmal Berpusat', 'Kompleks Kuliah Berpusat',
   ];
 
   final List<String> seatOptions = List.generate(9, (index) => (index + 1).toString());
@@ -102,18 +90,14 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       backgroundColor: const Color(0xFFEBF4FF),
       body: Stack(
         children: [
-          // 1. Static Wave Background
           Positioned.fill(
             child: CustomPaint(
               painter: FluidBackgroundPainter(animationValue: 0.5),
             ),
           ),
-
-          // 2. Main Layout
           SafeArea(
             child: Column(
               children: [
-                // --- STICKY HEADER ---
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   child: Row(
@@ -146,8 +130,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                     ],
                   ),
                 ),
-
-                // --- SCROLLABLE FORM ---
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
@@ -172,7 +154,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                           children: [
                             _buildSectionTitle('Route Details'),
                             const SizedBox(height: 16),
-                            
                             _buildDropdownField(
                               label: 'Pickup Location',
                               value: pickup.isEmpty ? null : pickup,
@@ -182,7 +163,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                               icon: Icons.my_location,
                             ),
                             const SizedBox(height: 16),
-                            
                             _buildDropdownField(
                               label: 'Destination',
                               value: destination.isEmpty ? null : destination,
@@ -191,11 +171,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                               validator: (v) => validateRequired(v, 'Destination'),
                               icon: Icons.location_on,
                             ),
-                            
                             const SizedBox(height: 24),
                             _buildSectionTitle('Trip Details'),
                             const SizedBox(height: 16),
-
                             _buildDateTimeField(
                               label: 'Departure Time',
                               value: time,
@@ -204,12 +182,17 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                               onTap: () async {
                                 final t = await showTimePicker(context: context, initialTime: TimeOfDay.now());
                                 if (t != null) {
-                                  setState(() => time = t.format(context));
+                                  // FIX: Force 12-hour format manually
+                                  final String period = t.hour >= 12 ? 'PM' : 'AM';
+                                  int hour12 = t.hour > 12 ? t.hour - 12 : t.hour;
+                                  if (hour12 == 0) hour12 = 12;
+                                  final String minute = t.minute.toString().padLeft(2, '0');
+                                  
+                                  setState(() => time = '$hour12:$minute $period');
                                 }
                               },
                             ),
                             const SizedBox(height: 16),
-
                             _buildDropdownField(
                               label: 'Available Seats',
                               value: seats.toString(),
@@ -218,11 +201,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                               validator: null,
                               icon: Icons.event_seat,
                             ),
-                            
                             const SizedBox(height: 24),
                             _buildSectionTitle('Pricing'),
                             const SizedBox(height: 12),
-
                             Container(
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF3F4F6),
@@ -236,7 +217,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                                 ],
                               ),
                             ),
-
                             if (!isFree) ...[
                               const SizedBox(height: 16),
                               _buildInputField(
@@ -248,9 +228,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                                 onSaved: (v) => costAmount = v ?? '',
                               ),
                             ],
-
                             const SizedBox(height: 32),
-                            
                             SizedBox(
                               width: double.infinity,
                               height: 54,
@@ -284,27 +262,11 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   }
 
   // --- Helper Widgets ---
-
   Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 18, 
-        fontWeight: FontWeight.bold, 
-        color: Color(0xFF111827)
-      ),
-    );
+    return Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF111827)));
   }
 
-  Widget _buildInputField({
-    required String label,
-    String? placeholder,
-    String? initialValue,
-    required IconData icon,
-    TextInputType inputType = TextInputType.text,
-    String? Function(String?)? validator,
-    Function(String?)? onSaved,
-  }) {
+  Widget _buildInputField({required String label, String? placeholder, String? initialValue, required IconData icon, TextInputType inputType = TextInputType.text, String? Function(String?)? validator, Function(String?)? onSaved}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -322,13 +284,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     );
   }
 
-  Widget _buildDateTimeField({
-    required String label,
-    required String value,
-    required String placeholder,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildDateTimeField({required String label, required String value, required String placeholder, required IconData icon, required VoidCallback onTap}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -345,14 +301,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     );
   }
 
-  Widget _buildDropdownField({
-    required String label,
-    required String? value,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-    required String? Function(String?)? validator,
-    required IconData icon,
-  }) {
+  Widget _buildDropdownField({required String label, required String? value, required List<String> items, required ValueChanged<String?> onChanged, required String? Function(String?)? validator, required IconData icon}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -365,7 +314,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
           items: items.map((l) => DropdownMenuItem(value: l, child: Text(l, overflow: TextOverflow.ellipsis))).toList(),
           onChanged: onChanged,
           validator: validator,
-          isExpanded: true, // Important for long text
+          isExpanded: true,
         ),
       ],
     );
@@ -379,22 +328,10 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       filled: true,
       fillColor: const Color(0xFFF9FAFB),
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade200),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF2B67F6), width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.redAccent),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2B67F6), width: 2)),
+      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.redAccent)),
     );
   }
 
@@ -408,18 +345,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
           decoration: BoxDecoration(
             color: isSelected ? Colors.white : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
-            boxShadow: isSelected 
-              ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))]
-              : [],
+            boxShadow: isSelected ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))] : [],
           ),
-          child: Text(
-            text,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: isSelected ? const Color(0xFF2B67F6) : const Color(0xFF6B7280),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          child: Text(text, textAlign: TextAlign.center, style: TextStyle(color: isSelected ? const Color(0xFF2B67F6) : const Color(0xFF6B7280), fontWeight: FontWeight.bold)),
         ),
       ),
     );
